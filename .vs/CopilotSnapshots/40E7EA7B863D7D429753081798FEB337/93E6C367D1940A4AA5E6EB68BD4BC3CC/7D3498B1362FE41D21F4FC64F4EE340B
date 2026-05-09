@@ -1,0 +1,78 @@
+﻿using System;
+using System.Collections.Generic;
+using MizanERP.Domain.Enums;
+
+namespace MizanERP.Domain.Entities
+{
+    public class SalesOrder
+    {
+        public Guid Id { get; private set; }
+        public Guid CustomerId { get; private set; }
+        public DateTime OrderDate { get; private set; }
+        public OrderStatus Status { get; private set; }
+        public List<SalesOrderLine> Lines { get; private set; }
+
+        public SalesOrder(Guid id, Guid customerId, DateTime orderDate)
+        {
+            Id = id;
+            CustomerId = customerId;
+            OrderDate = orderDate;
+            Status = OrderStatus.Draft;
+            Lines = new List<SalesOrderLine>();
+        }
+
+        public void AddLine(SalesOrderLine line)
+        {
+            if (line == null) throw new ArgumentNullException(nameof(line));
+            Lines.Add(line);
+        }
+
+        public void Submit()
+        {
+            if (Status != OrderStatus.Draft)
+                throw new InvalidOperationException("Only draft orders can be submitted.");
+            Status = OrderStatus.Submitted;
+        }
+
+        public void Approve()
+        {
+            if (Status != OrderStatus.Submitted)
+                throw new InvalidOperationException("Only submitted orders can be approved.");
+            Status = OrderStatus.Approved;
+        }
+
+        public void Complete()
+        {
+            if (Status != OrderStatus.Approved)
+                throw new InvalidOperationException("Only approved orders can be completed.");
+            Status = OrderStatus.Completed;
+        }
+
+        public void Cancel()
+        {
+            if (Status == OrderStatus.Completed)
+                throw new InvalidOperationException("Completed orders cannot be cancelled.");
+            Status = OrderStatus.Cancelled;
+        }
+    }
+
+    public class SalesOrderLine
+    {
+        public Guid Id { get; private set; }
+        public Guid SalesOrderId { get; private set; }
+        public Guid ProductId { get; private set; }
+        public decimal Quantity { get; private set; }
+        public decimal Price { get; private set; }
+
+        public SalesOrderLine(Guid id, Guid salesOrderId, Guid productId, decimal quantity, decimal price)
+        {
+            if (quantity <= 0) throw new ArgumentException("Quantity must be positive");
+            if (price < 0) throw new ArgumentException("Price cannot be negative");
+            Id = id;
+            SalesOrderId = salesOrderId;
+            ProductId = productId;
+            Quantity = quantity;
+            Price = price;
+        }
+    }
+}

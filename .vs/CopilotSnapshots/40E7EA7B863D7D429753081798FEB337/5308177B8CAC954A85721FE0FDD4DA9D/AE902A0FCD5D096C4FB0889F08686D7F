@@ -1,0 +1,192 @@
+﻿using System;
+using System.Threading.Tasks;
+using MizanERP.Application.DTOs;
+using MizanERP.Domain.Entities;
+using MizanERP.Domain.Enums;
+using MizanERP.Domain.ValueObjects;
+using MizanERP.Infrastructure.Persistence;
+
+namespace MizanERP.Application.Services
+{
+    public class SalesService : ISalesService
+    {
+        private readonly IUnitOfWork _unitOfWork;
+
+        public SalesService(IUnitOfWork unitOfWork)
+        {
+            _unitOfWork = unitOfWork ?? throw new ArgumentNullException(nameof(unitOfWork));
+        }
+
+        public async Task<Guid> CreateSalesOrderAsync(CreateSalesOrderDto dto)
+        {
+            if (dto == null) throw new ArgumentNullException(nameof(dto));
+            if (dto.Lines.Count == 0) throw new ArgumentException("Sales order must have at least one line");
+
+            var customer = await _unitOfWork.Customers.GetByIdAsync(dto.CustomerId);
+            if (customer == null) throw new InvalidOperationException($"Customer {dto.CustomerId} not found");
+
+            var salesOrder = new SalesOrder(Guid.NewGuid(), dto.CustomerId, dto.OrderDate);
+
+            foreach (var lineDto in dto.Lines)
+            {
+                var product = await _unitOfWork.Products.GetByIdAsync(lineDto.ProductId);
+                if (product == null) throw new InvalidOperationException($"Product {lineDto.ProductId} not found");
+                if (product.Type != ProductType.FinishedGood)
+                    throw new InvalidOperationException($"Product {lineDto.ProductId} is not a finished good");
+
+                if (product.InventoryQuantity < lineDto.Quantity)
+                    throw new InvalidOperationException($"Insufficient inventory for {product.Name}. Available: {product.InventoryQuantity}, Required: {lineDto.Quantity}");
+
+                var line = new SalesOrderLine(
+                    Guid.NewGuid(),
+                    salesOrder.Id,
+                    lineDto.ProductId,
+                    new Quantity(lineDto.Quantity, product.Unit),
+                    new Money(lineDto.Price, lineDto.Currency)
+                );
+
+                salesOrder.AddLine(line);
+            }
+
+            await _unitOfWork.SalesOrders.AddAsync(salesOrder);
+            await _unitOfWork.SaveChangesAsync();
+
+            return salesOrder.Id;
+        }
+
+        public async Task ShipGoodsAsync(Guid salesOrderId)
+        {
+            if (salesOrderId == Guid.Empty) throw new ArgumentException("Invalid sales order ID");
+
+            var salesOrder = await _unitOfWork.SalesOrders.GetByIdAsync(salesOrderId);
+            if (salesOrder == null) throw new InvalidOperationException($"Sales order {salesOrderId} not found");
+
+            if (salesOrder.Status != OrderStatus.Approved)
+                throw new InvalidOperationException($"Only approved orders can be shipped. Current status: {salesOrder.Status}");
+
+            foreach (var line in salesOrder.Lines)
+            {
+                var product = await _unitOfWork.Products.GetByIdAsync(line.ProductId);
+                if (product == null) throw new InvalidOperationException($"Product {line.ProductId} not found");
+
+                // Verify inventory again for safety
+                if (product.InventoryQuantity < line.Quantity.Value)
+                    throw new InvalidOperationException($"Insufficient inventory for {product.Name}. Available: {product.InventoryQuantity}, Required: {line.Quantity.Value}");
+
+                // Decrease inventory
+                product.DecreaseInventory(line.Quantity.Value);
+
+                // Create inventory movement
+                var movement = new InventoryMovement(
+                    Guid.NewGuid(),
+                    line.ProductId,
+                    line.Quantity,
+                    MovementType.Out,
+                    DateTime.UtcNow,
+                    null,
+                    null,
+                    null,
+                    $"SO-{salesOrder.Id:N}"
+                );
+
+                await _unitOfWork.Products.UpdateAsync(product);
+                await _unitOfWork.InventoryMovements.AddAsync(movement);
+
+                // Generate accounting entries (COGS and Revenue)
+                await GenerateShipmentAccountingEntriesAsync(salesOrder, line, product);
+            }
+
+            salesOrder.Complete();
+            await _unitOfWork.SalesOrders.UpdateAsync(salesOrder);
+            await _unitOfWork.SaveChangesAsync();
+        }
+
+        private async Task GenerateShipmentAccountingEntriesAsync(SalesOrder salesOrder, SalesOrderLine line, Product product)
+        {
+            var customer = await _unitOfWork.Customers.GetByIdAsync(salesOrder.CustomerId);
+            if (customer == null) return;
+
+            var totalRevenue = line.Price.Amount * line.Quantity.Value;
+
+            // Debit: Accounts Receivable (Asset)
+            var receivableAccount = await FindOrCreateAccountAsync($"Receivable - {customer.Name}", AccountType.Asset);
+            var debitReceivable = new AccountingEntry(
+                Guid.NewGuid(),
+                DateTime.UtcNow,
+                receivableAccount.Id,
+                totalRevenue,
+                0,
+                $"SO-{salesOrder.Id:N}"
+            );
+
+            // Credit: Sales Revenue (Revenue)
+            var revenueAccount = await FindOrCreateAccountAsync("Sales Revenue", AccountType.Revenue);
+            var creditRevenue = new AccountingEntry(
+                Guid.NewGuid(),
+                DateTime.UtcNow,
+                revenueAccount.Id,
+                0,
+                totalRevenue,
+                $"SO-{salesOrder.Id:N}"
+            );
+
+            // Debit: Cost of Goods Sold (Expense)
+            var productCost = await CalculateProductCogsAsync(product);
+            var debitCogs = new AccountingEntry(
+                Guid.NewGuid(),
+                DateTime.UtcNow,
+                (await FindOrCreateAccountAsync("Cost of Goods Sold", AccountType.Expense)).Id,
+                productCost * line.Quantity.Value,
+                0,
+                $"COGS-SO-{salesOrder.Id:N}"
+            );
+
+            // Credit: Finished Goods Inventory (Asset)
+            var finishedGoodsAccount = await FindOrCreateAccountAsync("Finished Goods Inventory", AccountType.Asset);
+            var creditInventory = new AccountingEntry(
+                Guid.NewGuid(),
+                DateTime.UtcNow,
+                finishedGoodsAccount.Id,
+                0,
+                productCost * line.Quantity.Value,
+                $"COGS-SO-{salesOrder.Id:N}"
+            );
+
+            await _unitOfWork.AccountingEntries.AddAsync(debitReceivable);
+            await _unitOfWork.AccountingEntries.AddAsync(creditRevenue);
+            await _unitOfWork.AccountingEntries.AddAsync(debitCogs);
+            await _unitOfWork.AccountingEntries.AddAsync(creditInventory);
+        }
+
+        private async Task<decimal> CalculateProductCogsAsync(Product product)
+        {
+            // Get the average cost from recent inventory movements
+            var movements = await _unitOfWork.InventoryMovements.GetAllAsync();
+            var productMovements = movements
+                .Where(m => m.ProductId == product.Id && m.Cost != null)
+                .ToList();
+
+            if (!productMovements.Any()) return 0;
+
+            var totalCost = productMovements.Sum(m => m.Cost?.Amount ?? 0);
+            var totalQuantity = productMovements.Sum(m => m.Quantity.Value);
+
+            return totalQuantity > 0 ? totalCost / totalQuantity : 0;
+        }
+
+        private async Task<Account> FindOrCreateAccountAsync(string accountName, AccountType type)
+        {
+            var accounts = await _unitOfWork.Accounts.GetAllAsync();
+            var account = accounts.FirstOrDefault(a => a.Name == accountName);
+
+            if (account == null)
+            {
+                account = new Account(Guid.NewGuid(), accountName, type);
+                await _unitOfWork.Accounts.AddAsync(account);
+                await _unitOfWork.SaveChangesAsync();
+            }
+
+            return account;
+        }
+    }
+}

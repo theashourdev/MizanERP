@@ -1,0 +1,17 @@
+D:\Mohammed\Projects\MizanERP\MizanERP.Infrastructure\bin\Debug\net10.0\MizanERP.Infrastructure.deps.json
+D:\Mohammed\Projects\MizanERP\MizanERP.Infrastructure\bin\Debug\net10.0\MizanERP.Infrastructure.dll
+D:\Mohammed\Projects\MizanERP\MizanERP.Infrastructure\bin\Debug\net10.0\MizanERP.Infrastructure.pdb
+D:\Mohammed\Projects\MizanERP\MizanERP.Infrastructure\bin\Debug\net10.0\MizanERP.Application.dll
+D:\Mohammed\Projects\MizanERP\MizanERP.Infrastructure\bin\Debug\net10.0\MizanERP.Domain.dll
+D:\Mohammed\Projects\MizanERP\MizanERP.Infrastructure\bin\Debug\net10.0\MizanERP.Application.pdb
+D:\Mohammed\Projects\MizanERP\MizanERP.Infrastructure\bin\Debug\net10.0\MizanERP.Domain.pdb
+D:\Mohammed\Projects\MizanERP\MizanERP.Infrastructure\obj\Debug\net10.0\MizanERP.Infrastructure.csproj.AssemblyReference.cache
+D:\Mohammed\Projects\MizanERP\MizanERP.Infrastructure\obj\Debug\net10.0\MizanERP.Infrastructure.GeneratedMSBuildEditorConfig.editorconfig
+D:\Mohammed\Projects\MizanERP\MizanERP.Infrastructure\obj\Debug\net10.0\MizanERP.Infrastructure.AssemblyInfoInputs.cache
+D:\Mohammed\Projects\MizanERP\MizanERP.Infrastructure\obj\Debug\net10.0\MizanERP.Infrastructure.AssemblyInfo.cs
+D:\Mohammed\Projects\MizanERP\MizanERP.Infrastructure\obj\Debug\net10.0\MizanERP.Infrastructure.csproj.CoreCompileInputs.cache
+D:\Mohammed\Projects\MizanERP\MizanERP.Infrastructure\obj\Debug\net10.0\MizanERP.42B68141.Up2Date
+D:\Mohammed\Projects\MizanERP\MizanERP.Infrastructure\obj\Debug\net10.0\MizanERP.Infrastructure.dll
+D:\Mohammed\Projects\MizanERP\MizanERP.Infrastructure\obj\Debug\net10.0\refint\MizanERP.Infrastructure.dll
+D:\Mohammed\Projects\MizanERP\MizanERP.Infrastructure\obj\Debug\net10.0\MizanERP.Infrastructure.pdb
+D:\Mohammed\Projects\MizanERP\MizanERP.Infrastructure\obj\Debug\net10.0\ref\MizanERP.Infrastructure.dll

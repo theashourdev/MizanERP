@@ -1,0 +1,24 @@
+﻿using System;
+
+namespace MizanERP.Domain.Entities
+{
+    public class Warehouse
+    {
+        public Guid Id { get; private set; }
+        public string Name { get; private set; }
+        public string? Location { get; private set; }
+        public bool IsActive { get; private set; }
+
+        public Warehouse(Guid id, string name, string? location = null)
+        {
+            if (string.IsNullOrWhiteSpace(name))
+                throw new ArgumentException("Warehouse name is required");
+            Id = id;
+            Name = name;
+            Location = location;
+            IsActive = true;
+        }
+        public void Deactivate() => IsActive = false;
+        public void Activate() => IsActive = true;
+    }
+}

@@ -1,0 +1,78 @@
+﻿using System;
+using System.Collections.Generic;
+using MizanERP.Domain.Enums;
+
+namespace MizanERP.Domain.Entities
+{
+    public class ProductionOrder
+    {
+        public Guid Id { get; private set; }
+        public Guid ProductId { get; private set; } // Finished product
+        public decimal Quantity { get; private set; }
+        public DateTime OrderDate { get; private set; }
+        public OrderStatus Status { get; private set; }
+        public List<ProductionOrderLine> Lines { get; private set; } // Raw materials
+
+        public ProductionOrder(Guid id, Guid productId, decimal quantity, DateTime orderDate)
+        {
+            if (quantity <= 0) throw new ArgumentException("Quantity must be positive");
+            Id = id;
+            ProductId = productId;
+            Quantity = quantity;
+            OrderDate = orderDate;
+            Status = OrderStatus.Draft;
+            Lines = new List<ProductionOrderLine>();
+        }
+
+        public void AddLine(ProductionOrderLine line)
+        {
+            if (line == null) throw new ArgumentNullException(nameof(line));
+            Lines.Add(line);
+        }
+
+        public void Submit()
+        {
+            if (Status != OrderStatus.Draft)
+                throw new InvalidOperationException("Only draft orders can be submitted.");
+            Status = OrderStatus.Submitted;
+        }
+
+        public void Approve()
+        {
+            if (Status != OrderStatus.Submitted)
+                throw new InvalidOperationException("Only submitted orders can be approved.");
+            Status = OrderStatus.Approved;
+        }
+
+        public void Complete()
+        {
+            if (Status != OrderStatus.Approved)
+                throw new InvalidOperationException("Only approved orders can be completed.");
+            Status = OrderStatus.Completed;
+        }
+
+        public void Cancel()
+        {
+            if (Status == OrderStatus.Completed)
+                throw new InvalidOperationException("Completed orders cannot be cancelled.");
+            Status = OrderStatus.Cancelled;
+        }
+    }
+
+    public class ProductionOrderLine
+    {
+        public Guid Id { get; private set; }
+        public Guid ProductionOrderId { get; private set; }
+        public Guid RawMaterialProductId { get; private set; }
+        public decimal Quantity { get; private set; }
+
+        public ProductionOrderLine(Guid id, Guid productionOrderId, Guid rawMaterialProductId, decimal quantity)
+        {
+            if (quantity <= 0) throw new ArgumentException("Quantity must be positive");
+            Id = id;
+            ProductionOrderId = productionOrderId;
+            RawMaterialProductId = rawMaterialProductId;
+            Quantity = quantity;
+        }
+    }
+}

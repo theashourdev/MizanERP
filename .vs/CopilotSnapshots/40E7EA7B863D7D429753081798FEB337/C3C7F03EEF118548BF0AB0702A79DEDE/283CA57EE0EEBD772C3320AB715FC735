@@ -1,0 +1,50 @@
+﻿using System;
+using System.Collections.Generic;
+
+namespace MizanERP.Domain.Entities
+{
+    public class User
+    {
+        public Guid Id { get; private set; }
+        public string UserName { get; private set; }
+        public bool IsActive { get; private set; }
+        public List<Role> Roles { get; private set; }
+
+        public User(Guid id, string userName)
+        {
+            if (string.IsNullOrWhiteSpace(userName))
+                throw new ArgumentException("User name is required");
+            Id = id;
+            UserName = userName;
+            IsActive = true;
+            Roles = new List<Role>();
+        }
+        public void AddRole(Role role)
+        {
+            if (role == null) throw new ArgumentNullException(nameof(role));
+            if (!Roles.Contains(role))
+                Roles.Add(role);
+        }
+        public void RemoveRole(Role role)
+        {
+            if (role == null) throw new ArgumentNullException(nameof(role));
+            Roles.Remove(role);
+        }
+        public void Deactivate() => IsActive = false;
+        public void Activate() => IsActive = true;
+    }
+
+    public class Role
+    {
+        public Guid Id { get; private set; }
+        public string Name { get; private set; }
+
+        public Role(Guid id, string name)
+        {
+            if (string.IsNullOrWhiteSpace(name))
+                throw new ArgumentException("Role name is required");
+            Id = id;
+            Name = name;
+        }
+    }
+}

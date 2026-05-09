@@ -1,0 +1,7 @@
+<Solution>
+  <Project Path="MizanERP.API/MizanERP.API.csproj" Id="6407646f-8b7e-4c8d-a501-c03466a4b948" />
+  <Project Path="MizanERP.Application/MizanERP.Application.csproj" />
+  <Project Path="MizanERP.Domain/MizanERP.Domain.csproj" />
+  <Project Path="MizanERP.Infrastructure/MizanERP.Infrastructure.csproj" />
+  <Project Path="MizanERP.Web/MizanERP.Web.csproj" />
+</Solution>

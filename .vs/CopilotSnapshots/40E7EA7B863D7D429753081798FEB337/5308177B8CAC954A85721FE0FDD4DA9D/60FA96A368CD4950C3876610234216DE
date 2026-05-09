@@ -1,0 +1,145 @@
+﻿using System;
+using System.Threading.Tasks;
+using MizanERP.Application.DTOs;
+using MizanERP.Domain.Entities;
+using MizanERP.Domain.Enums;
+using MizanERP.Domain.ValueObjects;
+using MizanERP.Infrastructure.Persistence;
+
+namespace MizanERP.Application.Services
+{
+    public class PurchaseService : IPurchaseService
+    {
+        private readonly IUnitOfWork _unitOfWork;
+
+        public PurchaseService(IUnitOfWork unitOfWork)
+        {
+            _unitOfWork = unitOfWork ?? throw new ArgumentNullException(nameof(unitOfWork));
+        }
+
+        public async Task<Guid> CreatePurchaseOrderAsync(CreatePurchaseOrderDto dto)
+        {
+            if (dto == null) throw new ArgumentNullException(nameof(dto));
+            if (dto.Lines.Count == 0) throw new ArgumentException("Purchase order must have at least one line");
+
+            var supplier = await _unitOfWork.Suppliers.GetByIdAsync(dto.SupplierId);
+            if (supplier == null) throw new InvalidOperationException($"Supplier {dto.SupplierId} not found");
+
+            var purchaseOrder = new PurchaseOrder(Guid.NewGuid(), dto.SupplierId, dto.OrderDate);
+
+            foreach (var lineDto in dto.Lines)
+            {
+                var product = await _unitOfWork.Products.GetByIdAsync(lineDto.ProductId);
+                if (product == null) throw new InvalidOperationException($"Product {lineDto.ProductId} not found");
+                if (product.Type != ProductType.RawMaterial)
+                    throw new InvalidOperationException($"Product {lineDto.ProductId} is not a raw material");
+
+                var line = new PurchaseOrderLine(
+                    Guid.NewGuid(),
+                    purchaseOrder.Id,
+                    lineDto.ProductId,
+                    new Quantity(lineDto.Quantity, product.Unit),
+                    new Money(lineDto.Price, lineDto.Currency)
+                );
+
+                purchaseOrder.AddLine(line);
+            }
+
+            await _unitOfWork.PurchaseOrders.AddAsync(purchaseOrder);
+            await _unitOfWork.SaveChangesAsync();
+
+            return purchaseOrder.Id;
+        }
+
+        public async Task ReceiveGoodsAsync(Guid purchaseOrderId)
+        {
+            if (purchaseOrderId == Guid.Empty) throw new ArgumentException("Invalid purchase order ID");
+
+            var purchaseOrder = await _unitOfWork.PurchaseOrders.GetByIdAsync(purchaseOrderId);
+            if (purchaseOrder == null) throw new InvalidOperationException($"Purchase order {purchaseOrderId} not found");
+
+            if (purchaseOrder.Status != OrderStatus.Approved)
+                throw new InvalidOperationException($"Only approved orders can be received. Current status: {purchaseOrder.Status}");
+
+            foreach (var line in purchaseOrder.Lines)
+            {
+                var product = await _unitOfWork.Products.GetByIdAsync(line.ProductId);
+                if (product == null) throw new InvalidOperationException($"Product {line.ProductId} not found");
+
+                // Increase inventory
+                product.IncreaseInventory(line.Quantity.Value);
+
+                // Create inventory movement
+                var movement = new InventoryMovement(
+                    Guid.NewGuid(),
+                    line.ProductId,
+                    line.Quantity,
+                    MovementType.In,
+                    DateTime.UtcNow,
+                    null,
+                    null,
+                    new Money(line.Price.Amount * line.Quantity.Value, line.Price.Currency),
+                    $"PO-{purchaseOrder.Id:N}"
+                );
+
+                await _unitOfWork.Products.UpdateAsync(product);
+                await _unitOfWork.InventoryMovements.AddAsync(movement);
+
+                // Generate accounting entry
+                await GenerateReceiptAccountingEntriesAsync(purchaseOrder, line);
+            }
+
+            purchaseOrder.Receive();
+            await _unitOfWork.PurchaseOrders.UpdateAsync(purchaseOrder);
+            await _unitOfWork.SaveChangesAsync();
+        }
+
+        private async Task GenerateReceiptAccountingEntriesAsync(PurchaseOrder purchaseOrder, PurchaseOrderLine line)
+        {
+            var supplier = await _unitOfWork.Suppliers.GetByIdAsync(purchaseOrder.SupplierId);
+            if (supplier == null) return;
+
+            var totalAmount = line.Price.Amount * line.Quantity.Value;
+
+            // Debit: Raw Material Inventory (Asset)
+            var rawMaterialAccount = await FindOrCreateAccountAsync("Raw Material Inventory", AccountType.Asset);
+            var debitEntry = new AccountingEntry(
+                Guid.NewGuid(),
+                DateTime.UtcNow,
+                rawMaterialAccount.Id,
+                totalAmount,
+                0,
+                $"Receipt PO-{purchaseOrder.Id:N}"
+            );
+
+            // Credit: Accounts Payable (Liability)
+            var payableAccount = await FindOrCreateAccountAsync($"Payable - {supplier.Name}", AccountType.Liability);
+            var creditEntry = new AccountingEntry(
+                Guid.NewGuid(),
+                DateTime.UtcNow,
+                payableAccount.Id,
+                0,
+                totalAmount,
+                $"Receipt PO-{purchaseOrder.Id:N}"
+            );
+
+            await _unitOfWork.AccountingEntries.AddAsync(debitEntry);
+            await _unitOfWork.AccountingEntries.AddAsync(creditEntry);
+        }
+
+        private async Task<Account> FindOrCreateAccountAsync(string accountName, AccountType type)
+        {
+            var accounts = await _unitOfWork.Accounts.GetAllAsync();
+            var account = accounts.FirstOrDefault(a => a.Name == accountName);
+
+            if (account == null)
+            {
+                account = new Account(Guid.NewGuid(), accountName, type);
+                await _unitOfWork.Accounts.AddAsync(account);
+                await _unitOfWork.SaveChangesAsync();
+            }
+
+            return account;
+        }
+    }
+}

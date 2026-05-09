@@ -1,0 +1,38 @@
+﻿using MizanERP.Application.DTOs;
+
+namespace MizanERP.Application.Services
+{
+    public class InventoryService : IInventoryService
+    {
+        public Task StockInAsync(InventoryTransactionDto dto) => throw new NotImplementedException();
+        public Task StockOutAsync(InventoryTransactionDto dto) => throw new NotImplementedException();
+        public Task AdjustAsync(InventoryTransactionDto dto) => throw new NotImplementedException();
+    }
+
+    public class PurchaseService : IPurchaseService
+    {
+        public Task<Guid> CreatePurchaseOrderAsync(CreatePurchaseOrderDto dto) => throw new NotImplementedException();
+        public Task ReceiveGoodsAsync(Guid purchaseOrderId) => throw new NotImplementedException();
+    }
+
+    public class SalesService : ISalesService
+    {
+        public Task<Guid> CreateSalesOrderAsync(CreateSalesOrderDto dto) => throw new NotImplementedException();
+        public Task ShipGoodsAsync(Guid salesOrderId) => throw new NotImplementedException();
+    }
+
+    public class ProductionService : IProductionService
+    {
+        public Task<Guid> CreateProductionOrderAsync(CreateProductionOrderDto dto) => throw new NotImplementedException();
+        public Task ConsumeRawMaterialsAsync(Guid productionOrderId) => throw new NotImplementedException();
+        public Task ProduceFinishedGoodsAsync(Guid productionOrderId) => throw new NotImplementedException();
+    }
+
+    public class AccountingService : IAccountingService
+    {
+        public Task GenerateJournalEntriesForPurchaseAsync(Guid purchaseOrderId) => throw new NotImplementedException();
+        public Task GenerateJournalEntriesForSaleAsync(Guid salesOrderId) => throw new NotImplementedException();
+        public Task GenerateJournalEntriesForProductionAsync(Guid productionOrderId) => throw new NotImplementedException();
+        public Task GenerateJournalEntriesForInventoryAdjustmentAsync(Guid inventoryTransactionId) => throw new NotImplementedException();
+    }
+}

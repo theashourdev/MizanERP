@@ -1,0 +1,11 @@
+D:\Mohammed\Projects\MizanERP\MizanERP.Domain\bin\Debug\net10.0\MizanERP.Domain.deps.json
+D:\Mohammed\Projects\MizanERP\MizanERP.Domain\bin\Debug\net10.0\MizanERP.Domain.dll
+D:\Mohammed\Projects\MizanERP\MizanERP.Domain\bin\Debug\net10.0\MizanERP.Domain.pdb
+D:\Mohammed\Projects\MizanERP\MizanERP.Domain\obj\Debug\net10.0\MizanERP.Domain.GeneratedMSBuildEditorConfig.editorconfig
+D:\Mohammed\Projects\MizanERP\MizanERP.Domain\obj\Debug\net10.0\MizanERP.Domain.AssemblyInfoInputs.cache
+D:\Mohammed\Projects\MizanERP\MizanERP.Domain\obj\Debug\net10.0\MizanERP.Domain.AssemblyInfo.cs
+D:\Mohammed\Projects\MizanERP\MizanERP.Domain\obj\Debug\net10.0\MizanERP.Domain.csproj.CoreCompileInputs.cache
+D:\Mohammed\Projects\MizanERP\MizanERP.Domain\obj\Debug\net10.0\MizanERP.Domain.dll
+D:\Mohammed\Projects\MizanERP\MizanERP.Domain\obj\Debug\net10.0\refint\MizanERP.Domain.dll
+D:\Mohammed\Projects\MizanERP\MizanERP.Domain\obj\Debug\net10.0\MizanERP.Domain.pdb
+D:\Mohammed\Projects\MizanERP\MizanERP.Domain\obj\Debug\net10.0\ref\MizanERP.Domain.dll
