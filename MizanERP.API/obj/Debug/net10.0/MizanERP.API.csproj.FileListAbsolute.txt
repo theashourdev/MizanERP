@@ -79,3 +79,4 @@ D:\Mohammed\Projects\MizanERP\MizanERP.API\obj\Debug\net10.0\refint\MizanERP.API
 D:\Mohammed\Projects\MizanERP\MizanERP.API\obj\Debug\net10.0\MizanERP.API.pdb
 D:\Mohammed\Projects\MizanERP\MizanERP.API\obj\Debug\net10.0\MizanERP.API.genruntimeconfig.cache
 D:\Mohammed\Projects\MizanERP\MizanERP.API\obj\Debug\net10.0\ref\MizanERP.API.dll
+D:\Mohammed\Projects\MizanERP\MizanERP.API\obj\Debug\net10.0\MizanERP.API.sourcelink.json

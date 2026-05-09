@@ -9,3 +9,4 @@ D:\Mohammed\Projects\MizanERP\MizanERP.Domain\obj\Debug\net10.0\MizanERP.Domain.
 D:\Mohammed\Projects\MizanERP\MizanERP.Domain\obj\Debug\net10.0\refint\MizanERP.Domain.dll
 D:\Mohammed\Projects\MizanERP\MizanERP.Domain\obj\Debug\net10.0\MizanERP.Domain.pdb
 D:\Mohammed\Projects\MizanERP\MizanERP.Domain\obj\Debug\net10.0\ref\MizanERP.Domain.dll
+D:\Mohammed\Projects\MizanERP\MizanERP.Domain\obj\Debug\net10.0\MizanERP.Domain.sourcelink.json

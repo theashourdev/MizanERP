@@ -13,3 +13,4 @@ D:\Mohammed\Projects\MizanERP\MizanERP.Application\obj\Debug\net10.0\MizanERP.Ap
 D:\Mohammed\Projects\MizanERP\MizanERP.Application\obj\Debug\net10.0\refint\MizanERP.Application.dll
 D:\Mohammed\Projects\MizanERP\MizanERP.Application\obj\Debug\net10.0\MizanERP.Application.pdb
 D:\Mohammed\Projects\MizanERP\MizanERP.Application\obj\Debug\net10.0\ref\MizanERP.Application.dll
+D:\Mohammed\Projects\MizanERP\MizanERP.Application\obj\Debug\net10.0\MizanERP.Application.sourcelink.json

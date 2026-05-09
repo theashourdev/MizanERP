@@ -15,3 +15,4 @@ D:\Mohammed\Projects\MizanERP\MizanERP.Infrastructure\obj\Debug\net10.0\MizanERP
 D:\Mohammed\Projects\MizanERP\MizanERP.Infrastructure\obj\Debug\net10.0\refint\MizanERP.Infrastructure.dll
 D:\Mohammed\Projects\MizanERP\MizanERP.Infrastructure\obj\Debug\net10.0\MizanERP.Infrastructure.pdb
 D:\Mohammed\Projects\MizanERP\MizanERP.Infrastructure\obj\Debug\net10.0\ref\MizanERP.Infrastructure.dll
+D:\Mohammed\Projects\MizanERP\MizanERP.Infrastructure\obj\Debug\net10.0\MizanERP.Infrastructure.sourcelink.json
