@@ -1,9 +1,11 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using MizanERP.Application.Interfaces;
 using MizanERP.Application.Services;
 using MizanERP.Domain.Entities;
 using MizanERP.Infrastructure;
 using MizanERP.Infrastructure.Persistence;
+using MizanERP.Infrastructure.Services;
 using MizanERP.Web.Configuration;
 using MizanERP.Web.Middleware;
 using MizanERP.Web.StartupExtensions;
@@ -46,6 +48,11 @@ builder.Services.AddScoped<IPurchaseService, PurchaseService>();
 builder.Services.AddScoped<ISalesService, SalesService>();
 builder.Services.AddScoped<IProductionService, ProductionService>();
 builder.Services.AddScoped<IAccountingService, AccountingService>();
+builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<IUserService, UserService>();
+
+builder.Services.AddScoped<IEmailService, EmailService>();
+builder.Services.AddScoped<IJwtService, JwtService>();
 
 // ✅ CORS (if needed for frontend)
 builder.Services.AddCors(options =>
