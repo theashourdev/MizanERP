@@ -1,11 +1,11 @@
-using System;
-
 namespace MizanERP.Domain.ValueObjects
 {
     public sealed class Quantity : IEquatable<Quantity>
     {
         public decimal Value { get; }
         public string Unit { get; }
+
+        private Quantity() { Value = 0; Unit = string.Empty; }
 
         public Quantity(decimal value, string unit)
         {

@@ -8,6 +8,7 @@ namespace MizanERP.Domain.Entities
         public bool IsActive { get; private set; }
         public List<Role> Roles { get; private set; }
 
+        private User() { UserName = string.Empty; Roles = new List<Role>(); }
         public User(Guid id, string userName)
         {
             if (string.IsNullOrWhiteSpace(userName))
@@ -36,6 +37,7 @@ namespace MizanERP.Domain.Entities
     {
         public string Name { get; private set; }
 
+        private Role() { Name = string.Empty; }
         public Role(Guid id, string name)
         {
             if (string.IsNullOrWhiteSpace(name))

@@ -13,6 +13,8 @@ namespace MizanERP.Domain.Entities
         public OrderStatus Status { get; private set; }
         public List<ProductionOrderLine> Lines { get; private set; } // Raw materials
 
+        private ProductionOrder() { Lines = new List<ProductionOrderLine>(); }
+
         public ProductionOrder(Guid id, Guid productId, Quantity quantity, DateTime orderDate)
         {
             if (quantity == null || quantity.Value <= 0) throw new ArgumentException("Quantity must be positive");
@@ -66,10 +68,12 @@ namespace MizanERP.Domain.Entities
 
     public class ProductionOrderLine : BaseEntity
     {
+
         public Guid ProductionOrderId { get; private set; }
         public Guid RawMaterialProductId { get; private set; }
         public Quantity Quantity { get; private set; }
 
+        private ProductionOrderLine() { Quantity = new Quantity(0, string.Empty); }
         public ProductionOrderLine(Guid id, Guid productionOrderId, Guid rawMaterialProductId, Quantity quantity)
         {
             if (quantity == null || quantity.Value <= 0) throw new ArgumentException("Quantity must be positive");

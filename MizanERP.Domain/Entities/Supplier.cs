@@ -1,4 +1,3 @@
-using System;
 using MizanERP.Domain.Common;
 using MizanERP.Domain.ValueObjects;
 
@@ -10,6 +9,8 @@ namespace MizanERP.Domain.Entities
         public Address? Address { get; private set; }
         public string? ContactInfo { get; private set; }
         public bool IsActive { get; private set; }
+
+        private Supplier() { Name = string.Empty; }
 
         public Supplier(Guid id, string name, Address? address = null, string? contactInfo = null)
         {

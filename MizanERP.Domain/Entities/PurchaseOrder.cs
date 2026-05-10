@@ -1,5 +1,3 @@
-using System;
-using System.Collections.Generic;
 using MizanERP.Domain.Common;
 using MizanERP.Domain.Enums;
 using MizanERP.Domain.ValueObjects;
@@ -13,6 +11,8 @@ namespace MizanERP.Domain.Entities
         public DateTime OrderDate { get; private set; }
         public OrderStatus Status { get; private set; }
         public List<PurchaseOrderLine> Lines { get; private set; }
+
+        private PurchaseOrder() { Lines = new List<PurchaseOrderLine>(); }
 
         public PurchaseOrder(Guid id, Guid supplierId, DateTime orderDate)
         {
@@ -91,6 +91,8 @@ namespace MizanERP.Domain.Entities
         public Guid ProductId { get; private set; }
         public Quantity Quantity { get; private set; }
         public Money Price { get; private set; }
+
+        private PurchaseOrderLine() { Quantity = new Quantity(0, string.Empty); Price = new Money(0, "USD"); }
 
         public PurchaseOrderLine(Guid id, Guid purchaseOrderId, Guid productId, Quantity quantity, Money price)
         {

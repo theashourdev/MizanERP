@@ -1,5 +1,3 @@
-using System;
-
 namespace MizanERP.Domain.ValueObjects
 {
     public sealed class Address : IEquatable<Address>
@@ -10,6 +8,8 @@ namespace MizanERP.Domain.ValueObjects
         public string State { get; }
         public string PostalCode { get; }
         public string Country { get; }
+
+        private Address() { }
 
         public Address(string line1, string city, string state, string postalCode, string country, string? line2 = null)
         {

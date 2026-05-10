@@ -1,4 +1,3 @@
-using System;
 using MizanERP.Domain.Common;
 using MizanERP.Domain.Enums;
 
@@ -12,6 +11,8 @@ namespace MizanERP.Domain.Entities
         public string? Code { get; private set; }
         public bool IsActive { get; private set; }
         public decimal InventoryQuantity { get; private set; }
+
+        private Product() { Name = string.Empty; Unit = string.Empty; }
 
         public Product(Guid id, string name, ProductType type, string unit, string? code = null)
         {

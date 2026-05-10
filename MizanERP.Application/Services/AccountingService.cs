@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using System.Threading.Tasks;
+using MizanERP.Application.DTOs;
 using MizanERP.Domain.Entities;
 using MizanERP.Domain.Enums;
 
@@ -13,6 +14,77 @@ namespace MizanERP.Application.Services
         public AccountingService(IUnitOfWork unitOfWork)
         {
             _unitOfWork = unitOfWork ?? throw new ArgumentNullException(nameof(unitOfWork));
+        }
+
+        public async Task GenerateJournalEntriesAsync(AccountingTransactionDto dto)
+        {
+            if (dto == null)
+                throw new ArgumentNullException(nameof(dto));
+
+            if (dto.AccountId == Guid.Empty)
+                throw new ArgumentException("Invalid account ID");
+
+            var account = await _unitOfWork.Accounts.GetByIdAsync(dto.AccountId);
+            if (account == null)
+                throw new InvalidOperationException($"Account {dto.AccountId} not found");
+
+            if (dto.DebitAmount > 0 || dto.CreditAmount > 0)
+            {
+                var entry = new AccountingEntry(
+                    Guid.NewGuid(),
+                    dto.TransactionDate,
+                    dto.AccountId,
+                    dto.DebitAmount,
+                    dto.CreditAmount,
+                    dto.Reference ?? dto.Description
+                );
+
+                await _unitOfWork.AccountingEntries.AddAsync(entry);
+                await _unitOfWork.SaveChangesAsync();
+            }
+        }
+
+        public async Task PostEntriesToLedgerAsync()
+        {
+            // Implementation: typically marks entries as posted/locked
+            // For now, this is a placeholder
+            await Task.CompletedTask;
+        }
+
+        public async Task<object> GenerateTrialBalanceAsync()
+        {
+            var entries = await _unitOfWork.AccountingEntries.GetAllAsync();
+            var groupedByAccount = entries.GroupBy(e => e.AccountId);
+            
+            var trialBalance = new List<dynamic>();
+            foreach (var group in groupedByAccount)
+            {
+                var totalDebit = group.Sum(e => e.Debit);
+                var totalCredit = group.Sum(e => e.Credit);
+                var balance = totalDebit - totalCredit;
+
+                if (balance != 0)
+                {
+                    trialBalance.Add(new 
+                    { 
+                        AccountId = group.Key, 
+                        TotalDebit = totalDebit,
+                        TotalCredit = totalCredit,
+                        Balance = balance
+                    });
+                }
+            }
+
+            var totalDebitSum = trialBalance.Sum(x => (decimal)x.TotalDebit);
+            var totalCreditSum = trialBalance.Sum(x => (decimal)x.TotalCredit);
+
+            return new 
+            { 
+                GeneratedAt = DateTime.UtcNow,
+                Entries = trialBalance,
+                TotalDebit = totalDebitSum,
+                TotalCredit = totalCreditSum
+            };
         }
 
         public async Task GenerateJournalEntriesForPurchaseAsync(Guid purchaseOrderId)

@@ -12,68 +12,41 @@ namespace MizanERP.Infrastructure.Seeding
         {
             try
             {
-                await context.Database.EnsureCreatedAsync();
-
-                // Seed only if empty
-                if (await context.Users.CountAsync() > 0)
+                // Check if data already exists (avoid duplicate seeding)
+                if (await context.Products.CountAsync() > 0)
+                {
+                    Console.WriteLine("   ℹ️  Business data already exists, skipping seed.");
                     return;
+                }
 
-                // Seed Roles
-                await SeedRolesAsync(context);
-
-                // Seed Users
-                await SeedUsersAsync(context);
+                Console.WriteLine("   📋 Starting business data seeding...");
 
                 // Seed Accounts (Chart of Accounts)
                 await SeedAccountsAsync(context);
+                Console.WriteLine("   ✓ Accounts seeded.");
 
                 // Seed Warehouse
                 await SeedWarehousesAsync(context);
+                Console.WriteLine("   ✓ Warehouses seeded.");
 
                 // Seed Products
                 await SeedProductsAsync(context);
+                Console.WriteLine("   ✓ Products seeded.");
 
+                // Save all changes at once
                 await context.SaveChangesAsync();
+                Console.WriteLine("   ✓ All changes saved to database.");
             }
             catch (Exception ex)
             {
+                Console.WriteLine($"   ❌ Seeding error: {ex.Message}");
                 throw new InvalidOperationException("Database seeding failed.", ex);
             }
         }
 
-        private static async Task SeedRolesAsync(MizanERPDbContext context)
-        {
-            var roles = new[]
-            {
-                new Role(Guid.NewGuid(), "Admin"),
-                new Role(Guid.NewGuid(), "Manager"),
-                new Role(Guid.NewGuid(), "Staff"),
-                new Role(Guid.NewGuid(), "Accountant")
-            };
-
-            foreach (var role in roles)
-            {
-                if (!context.Roles.Any(r => r.Name == role.Name))
-                {
-                    await context.Roles.AddAsync(role);
-                }
-            }
-        }
-
-        private static async Task SeedUsersAsync(MizanERPDbContext context)
-        {
-            var adminRole = await context.Roles.FirstOrDefaultAsync(r => r.Name == "Admin");
-            if (adminRole == null) return;
-
-            var adminUser = new User(Guid.NewGuid(), "admin");
-            adminUser.AddRole(adminRole);
-
-            if (!context.Users.Any(u => u.UserName == "admin"))
-            {
-                await context.Users.AddAsync(adminUser);
-            }
-        }
-
+        /// <summary>
+        /// Seed Chart of Accounts for accounting functionality
+        /// </summary>
         private static async Task SeedAccountsAsync(MizanERPDbContext context)
         {
             var accounts = new[]
@@ -84,10 +57,13 @@ namespace MizanERP.Infrastructure.Seeding
                 new Account(Guid.NewGuid(), "Raw Material Inventory", AccountType.Asset),
                 new Account(Guid.NewGuid(), "Finished Goods Inventory", AccountType.Asset),
                 new Account(Guid.NewGuid(), "Inventory Adjustment", AccountType.Asset),
+                new Account(Guid.NewGuid(), "Equipment", AccountType.Asset),
+                new Account(Guid.NewGuid(), "Accumulated Depreciation", AccountType.Asset),
 
                 // Liability Accounts
                 new Account(Guid.NewGuid(), "Accounts Payable", AccountType.Liability),
                 new Account(Guid.NewGuid(), "Accrued Expenses", AccountType.Liability),
+                new Account(Guid.NewGuid(), "Short-term Loans", AccountType.Liability),
 
                 // Equity Accounts
                 new Account(Guid.NewGuid(), "Owner's Equity", AccountType.Equity),
@@ -95,43 +71,61 @@ namespace MizanERP.Infrastructure.Seeding
 
                 // Revenue Accounts
                 new Account(Guid.NewGuid(), "Sales Revenue", AccountType.Revenue),
+                new Account(Guid.NewGuid(), "Service Revenue", AccountType.Revenue),
 
                 // Expense Accounts
                 new Account(Guid.NewGuid(), "Cost of Goods Sold", AccountType.Expense),
                 new Account(Guid.NewGuid(), "Inventory Variance", AccountType.Expense),
+                new Account(Guid.NewGuid(), "Salaries and Wages", AccountType.Expense),
+                new Account(Guid.NewGuid(), "Utilities", AccountType.Expense),
+                new Account(Guid.NewGuid(), "Depreciation Expense", AccountType.Expense),
             };
 
             foreach (var account in accounts)
             {
-                if (!context.Accounts.Any(a => a.Name == account.Name))
+                if (!await context.Accounts.AnyAsync(a => a.Name == account.Name))
                 {
                     await context.Accounts.AddAsync(account);
                 }
             }
         }
 
+        /// <summary>
+        /// Seed warehouses for inventory management
+        /// </summary>
         private static async Task SeedWarehousesAsync(MizanERPDbContext context)
         {
-            var warehouseAddress = new Address(
-                "123 Industrial Road",
-                "Manchester",
-                "Greater Manchester",
-                "M1 1AA",
-                "United Kingdom"
-            );
-
-            var warehouse = new Warehouse(
-                Guid.NewGuid(),
-                "Main Warehouse",
-                warehouseAddress
-            );
-
-            if (!context.Warehouses.Any(w => w.Name == "Main Warehouse"))
+            var warehouses = new[]
             {
-                await context.Warehouses.AddAsync(warehouse);
+                new Warehouse(
+                    Guid.NewGuid(),
+                    "Main Warehouse",
+                    new Address("123 Industrial Road", "Manchester", "Greater Manchester", "M1 1AA", "United Kingdom")
+                ),
+                new Warehouse(
+                    Guid.NewGuid(),
+                    "Secondary Warehouse",
+                    new Address("456 Commerce Park", "London", "London", "E1 6AN", "United Kingdom")
+                ),
+                new Warehouse(
+                    Guid.NewGuid(),
+                    "Distribution Center",
+                    new Address("789 Logistics Way", "Birmingham", "West Midlands", "B7 4BB", "United Kingdom")
+                )
+            };
+
+            foreach (var warehouse in warehouses)
+            {
+                if (!await context.Warehouses.AnyAsync(w => w.Name == warehouse.Name))
+                {
+                    await context.Warehouses.AddAsync(warehouse);
+                }
             }
         }
 
+        /// <summary>
+        /// Seed sample products (raw materials and finished goods)
+        /// </summary>
         private static async Task SeedProductsAsync(MizanERPDbContext context)
         {
             var rawMaterials = new[]
@@ -139,6 +133,8 @@ namespace MizanERP.Infrastructure.Seeding
                 new Product(Guid.NewGuid(), "Steel Sheet", ProductType.RawMaterial, "kg", "RM-001"),
                 new Product(Guid.NewGuid(), "Plastic Resin", ProductType.RawMaterial, "kg", "RM-002"),
                 new Product(Guid.NewGuid(), "Electronic Component", ProductType.RawMaterial, "pcs", "RM-003"),
+                new Product(Guid.NewGuid(), "Aluminum Bar", ProductType.RawMaterial, "kg", "RM-004"),
+                new Product(Guid.NewGuid(), "Rubber Seal", ProductType.RawMaterial, "pcs", "RM-005"),
             };
 
             var finishedGoods = new[]
@@ -146,6 +142,7 @@ namespace MizanERP.Infrastructure.Seeding
                 new Product(Guid.NewGuid(), "Metal Frame", ProductType.FinishedGood, "pcs", "FG-001"),
                 new Product(Guid.NewGuid(), "Plastic Housing", ProductType.FinishedGood, "pcs", "FG-002"),
                 new Product(Guid.NewGuid(), "Assembled Device", ProductType.FinishedGood, "pcs", "FG-003"),
+                new Product(Guid.NewGuid(), "Electronic Module", ProductType.FinishedGood, "pcs", "FG-004"),
             };
 
             var allProducts = new List<Product>();
@@ -154,7 +151,7 @@ namespace MizanERP.Infrastructure.Seeding
 
             foreach (var product in allProducts)
             {
-                if (!context.Products.Any(p => p.Code == product.Code))
+                if (!await context.Products.AnyAsync(p => p.Code == product.Code))
                 {
                     await context.Products.AddAsync(product);
                 }

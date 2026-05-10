@@ -54,4 +54,34 @@ namespace MizanERP.Application.DTOs
         public decimal? Cost { get; set; }
         public string? Currency { get; set; }
     }
+
+    // Product DTOs
+    public class CreateProductDto
+    {
+        public string Code { get; set; } = string.Empty;
+        public string Name { get; set; } = string.Empty;
+        public string Description { get; set; } = string.Empty;
+        public decimal Price { get; set; }
+        public string Currency { get; set; } = "USD";
+        public bool IsRawMaterial { get; set; }
+    }
+
+    public class UpdateProductDto
+    {
+        public string Name { get; set; } = string.Empty;
+        public string Description { get; set; } = string.Empty;
+        public decimal Price { get; set; }
+        public string Currency { get; set; } = "USD";
+    }
+
+    // Accounting DTOs
+    public class AccountingTransactionDto
+    {
+        public Guid AccountId { get; set; }
+        public decimal DebitAmount { get; set; }
+        public decimal CreditAmount { get; set; }
+        public string Description { get; set; } = string.Empty;
+        public DateTime TransactionDate { get; set; }
+        public string? Reference { get; set; }
+    }
 }

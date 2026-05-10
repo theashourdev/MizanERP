@@ -1,9 +1,11 @@
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using MizanERP.Domain.Entities;
 
 namespace MizanERP.Infrastructure.Persistence
 {
-    public class MizanERPDbContext : DbContext
+    public class MizanERPDbContext : IdentityDbContext<ApplicationUser, IdentityRole<Guid>, Guid>
     {
         public MizanERPDbContext(DbContextOptions<MizanERPDbContext> options) : base(options) { }
 
@@ -25,8 +27,8 @@ namespace MizanERP.Infrastructure.Persistence
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            modelBuilder.ApplyConfigurationsFromAssembly(typeof(MizanERPDbContext).Assembly);
             base.OnModelCreating(modelBuilder);
+            modelBuilder.ApplyConfigurationsFromAssembly(typeof(MizanERPDbContext).Assembly);
         }
     }
 }

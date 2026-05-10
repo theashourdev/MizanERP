@@ -1,9 +1,16 @@
-using System;
-using System.Threading.Tasks;
 using MizanERP.Application.DTOs;
 
 namespace MizanERP.Application.Services
 {
+    public interface IProductService
+    {
+        Task<Guid> CreateProductAsync(CreateProductDto dto);
+        Task UpdateProductAsync(Guid productId, UpdateProductDto dto);
+        Task DeleteProductAsync(Guid productId);
+        Task<object?> GetProductByIdAsync(Guid productId);
+        Task<List<object>> GetAllProductsAsync();
+    }
+
     public interface IInventoryService
     {
         Task StockInAsync(InventoryTransactionDto dto);
@@ -32,9 +39,12 @@ namespace MizanERP.Application.Services
 
     public interface IAccountingService
     {
+        Task GenerateJournalEntriesAsync(AccountingTransactionDto dto);
         Task GenerateJournalEntriesForPurchaseAsync(Guid purchaseOrderId);
         Task GenerateJournalEntriesForSaleAsync(Guid salesOrderId);
         Task GenerateJournalEntriesForProductionAsync(Guid productionOrderId);
         Task GenerateJournalEntriesForInventoryAdjustmentAsync(Guid inventoryTransactionId);
+        Task PostEntriesToLedgerAsync();
+        Task<object> GenerateTrialBalanceAsync();
     }
 }

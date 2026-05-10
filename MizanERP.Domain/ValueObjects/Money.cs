@@ -1,6 +1,3 @@
-using System;
-using System.Globalization;
-
 namespace MizanERP.Domain.ValueObjects
 {
     public sealed class Money : IEquatable<Money>
@@ -8,6 +5,7 @@ namespace MizanERP.Domain.ValueObjects
         public decimal Amount { get; }
         public string Currency { get; }
 
+        private Money() { Amount = 0; Currency = string.Empty; }
         public Money(decimal amount, string currency)
         {
             if (string.IsNullOrWhiteSpace(currency))
