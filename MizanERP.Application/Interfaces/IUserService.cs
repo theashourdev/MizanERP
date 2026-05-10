@@ -1,5 +1,7 @@
-﻿using MizanERP.Application.Common;
+﻿using Microsoft.AspNetCore.Identity;
+using MizanERP.Application.Common;
 using MizanERP.Application.DTOs.Users;
+using MizanERP.Domain.Entities;
 
 namespace MizanERP.Application.Interfaces;
 
@@ -14,4 +16,5 @@ public interface IUserService
     Task<ApiResponse> UnlockAsync(string id);
     Task<ApiResponse> AssignRoleAsync(string id, string roleName);
     Task<ApiResponse> RemoveRoleAsync(string id, string roleName);
+    IdentityResult VerifyOTP(ApplicationUser user, string otpCode);
 }

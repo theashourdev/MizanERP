@@ -224,4 +224,22 @@ public class UserService : IUserService
         Roles = roles.ToList(),
         CreatedAt = user.CreatedAt,
     };
+
+
+    public IdentityResult VerifyOTP(ApplicationUser user, string otpCode)
+    {
+        // Implement OTP verification logic here
+        if (user.EmailOtpCode == otpCode && user.EmailOtpExpiry > DateTime.Now)
+        {
+            // OTP is valid
+            user.EmailConfirmed = true;
+            return IdentityResult.Success;
+        }
+        else
+        {
+            // OTP is invalid or expired
+            return IdentityResult.Failed(new IdentityError { Description = "Invalid or expired OTP code." });
+        }
+
+    }
 }

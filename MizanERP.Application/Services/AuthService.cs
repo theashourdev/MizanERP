@@ -4,6 +4,7 @@ using MizanERP.Application.Common;
 using MizanERP.Application.DTOs.Auth;
 using MizanERP.Application.Interfaces;
 using MizanERP.Domain.Entities;
+using System.Security.Cryptography;
 
 namespace MizanERP.Application.Services;
 
@@ -15,6 +16,7 @@ public class AuthService : IAuthService
     private readonly IEmailService _emailService;
     private readonly IConfiguration _configuration;
     private readonly IUnitOfWork _unitOfWork;
+    private readonly IUserService _userService;
 
     public AuthService(
         UserManager<ApplicationUser> userManager,
@@ -22,7 +24,8 @@ public class AuthService : IAuthService
         IJwtService jwtService,
         IEmailService emailService,
         IConfiguration configuration,
-        IUnitOfWork unitOfWork)
+        IUnitOfWork unitOfWork,
+        IUserService userService)
     {
         _userManager = userManager;
         _signInManager = signInManager;
@@ -30,6 +33,7 @@ public class AuthService : IAuthService
         _emailService = emailService;
         _configuration = configuration;
         _unitOfWork = unitOfWork;
+        _userService = userService;
     }
 
     // ─── Login ────────────────────────────────────────────────────────────────
@@ -93,6 +97,7 @@ public class AuthService : IAuthService
             {
                 FirstName = request.FirstName,
                 LastName = request.LastName,
+                FullName = $"{request.FirstName} {request.LastName}",
                 Email = request.Email,
                 UserName = request.Email,
                 PhoneNumber = request.PhoneNumber,
@@ -103,23 +108,22 @@ public class AuthService : IAuthService
             if (!result.Succeeded)
                 return ApiResponse.Fail("Registration failed.", result.Errors.Select(e => e.Description).ToList());
 
-            var defaultRole = _configuration["AppSettings:DefaultRole"] ?? "TestUser";
+            var defaultRole = _configuration["AppSettings:DefaultRole"] ?? "User";
 
             var roleResult = await _userManager.AddToRoleAsync(user, defaultRole);
 
             if (!roleResult.Succeeded)
                 return ApiResponse.Fail("Failed to assign role.", roleResult.Errors.Select(e => e.Description).ToList());
 
-            var token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
 
-            var clientUrl = _configuration["AppSettings:ClientUrl"];
-            var verificationLink =
-                $"{clientUrl}/verify-email?userId={user.Id}&token={Uri.EscapeDataString(token)}";
+            var otp = GenerateOtp();
+            user.EmailOtpCode = otp;
+            user.EmailOtpExpiry = DateTime.Now.AddMinutes(5);
 
-            await _emailService.SendEmailVerificationAsync(
+            await _emailService.SendEmailOtpAsync(
                 user.Email!,
-                user.FullName,
-                verificationLink);
+                user.FirstName,
+                otp, user.EmailOtpExpiry.Value);
 
             await _unitOfWork.CommitAsync();
 
@@ -145,17 +149,10 @@ public class AuthService : IAuthService
 
         var token = await _userManager.GeneratePasswordResetTokenAsync(user);
         var clientUrl = _configuration["AppSettings:ClientUrl"];
-        var resetLink = $"{clientUrl}/reset-password?email={Uri.EscapeDataString(user.Email!)}&token={Uri.EscapeDataString(token)}";
+        var resetLink = $"{clientUrl}/reset-password?email={Uri.EscapeDataString(user.Email!)}&token={Uri.EscapeDataString(token)}&string={token}";
 
         await _emailService.SendPasswordResetAsync(user.Email!, user.FullName, resetLink);
 
-        // Also send SMS OTP if phone exists
-        if (!string.IsNullOrEmpty(user.PhoneNumber))
-        {
-            var otp = GenerateOtp();
-            //await _smsService.SendPasswordResetOtpAsync(user.PhoneNumber, otp);
-            // Note: store OTP in cache/db for verification in real implementation
-        }
 
         return ApiResponse.Ok("If this email exists, a reset link has been sent.");
     }
@@ -216,17 +213,16 @@ public class AuthService : IAuthService
         if (user.EmailConfirmed)
             return ApiResponse.Ok("Email already verified.");
 
-        var result = await _userManager.ConfirmEmailAsync(user, request.Token);
+        var result = _userService.VerifyOTP(user, request.OtpCode);
 
         if (!result.Succeeded)
-            return ApiResponse.Fail("Email verification failed. Link may have expired.");
+            return ApiResponse.Fail("Email verification failed.");
 
         await _userManager.UpdateAsync(user);
 
         return ApiResponse.Ok("Email verified successfully. You can now login.");
     }
 
-    // ─── Resend Verification Email ────────────────────────────────────────────
     public async Task<ApiResponse> ResendVerificationEmailAsync(string email)
     {
         var user = await _userManager.FindByEmailAsync(email);
@@ -234,18 +230,31 @@ public class AuthService : IAuthService
         if (user == null || !user.IsActive || user.EmailConfirmed)
             return ApiResponse.Ok("If applicable, a verification email has been sent.");
 
-        var token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
-        var clientUrl = _configuration["AppSettings:ClientUrl"];
-        var verificationLink = $"{clientUrl}/verify-email?userId={user.Id}&token={Uri.EscapeDataString(token)}";
+        var otp = GenerateOtp();
+        user.EmailOtpCode = otp;
+        user.EmailOtpExpiry = DateTime.Now.AddMinutes(5);
 
-        await _emailService.SendEmailVerificationAsync(user.Email!, user.FullName, verificationLink);
+        await _userManager.UpdateAsync(user);
+
+
+        await _emailService.SendEmailOtpAsync(
+            user.Email!,
+            user.FirstName,
+            otp, user.EmailOtpExpiry.Value);
 
         return ApiResponse.Ok("Verification email sent.");
     }
 
     private static string GenerateOtp(int length = 6)
     {
-        var random = new Random();
-        return string.Concat(Enumerable.Range(0, length).Select(_ => random.Next(0, 10).ToString()));
+        var digits = new char[length];
+
+        for (int i = 0; i < length; i++)
+        {
+            digits[i] = RandomNumberGenerator.GetInt32(0, 10).ToString()[0];
+        }
+
+        return new string(digits);
     }
+
 }

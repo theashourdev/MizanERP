@@ -1,5 +1,4 @@
-﻿
-using Microsoft.AspNetCore.Identity;
+﻿using Microsoft.AspNetCore.Identity;
 
 namespace MizanERP.Domain.Entities
 {
@@ -7,16 +6,17 @@ namespace MizanERP.Domain.Entities
     {
         public string FirstName { get; set; } = string.Empty;
         public string LastName { get; set; } = string.Empty;
-
         public string FullName { get; set; } = string.Empty;
         public bool IsActive { get; set; } = true;
         public DateTime CreatedAt { get; set; } = DateTime.Now;
         public DateTime? UpdatedAt { get; set; }
         public Guid? DomainUserId { get; set; }
-
         public string? ProfilePicture { get; set; }
-
         public bool IsDeleted { get; protected set; }
+
+        // OTP for email verification
+        public string? EmailOtpCode { get; set; }
+        public DateTime? EmailOtpExpiry { get; set; }
 
         public void MarkDeleted()
         {

@@ -105,6 +105,52 @@ public class EmailService : IEmailService
         await SendAsync(toEmail, subject, body);
     }
 
+    public async Task SendEmailOtpAsync(string toEmail, string userName, string otp, DateTime expiry)
+    {
+        var subject = $"Verify Your {_appName} Account";
+
+        var expiryText = expiry.ToString("yyyy-MM-dd HH:mm");
+
+        var body = GetEmailTemplate(
+            title: "Security Verification Code",
+            greeting: $"Hello {userName},",
+            content: $@"
+            <p style='font-size:16px;line-height:1.6'>
+                We received a request to verify your email address.
+            </p>
+
+            <p style='font-size:14px;color:#666;margin-top:10px'>
+                Please use the following One-Time Password (OTP) to complete your verification process:
+            </p>
+
+            <div style='text-align:center;margin:30px 0;'>
+                <div style='display:inline-block;padding:15px 30px;
+                            font-size:28px;font-weight:bold;
+                            letter-spacing:8px;
+                            background:#f4f6f8;
+                            border:2px dashed #2563EB;
+                            border-radius:8px;
+                            color:#1e3a5f'>
+                    {otp}
+                </div>
+            </div>
+
+            <p style='font-size:14px;color:#444'>
+                <strong>Expiration Time:</strong>
+                <span style='color:#d9534f'>{expiryText} (UTC)</span>
+            </p>
+
+            <p style='font-size:13px;color:#888;margin-top:10px'>
+                This code will expire automatically after the above time for your security.
+            </p>
+        ",
+            buttonText: null,
+            buttonUrl: null,
+            footer: "If you did not request this verification, you can safely ignore this email."
+        );
+
+        await SendAsync(toEmail, subject, body);
+    }
     public async Task SendAsyncDefault(string toEmail, string subject, string htmlBody)
     {
         try

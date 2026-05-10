@@ -8,6 +8,7 @@ public interface IEmailService
     Task SendPasswordChangedNotificationAsync(string toEmail, string userName);
     Task SendAccountLockedNotificationAsync(string toEmail, string userName);
     Task SendAsync(string toEmail, string subject, string htmlBody);
+    Task SendEmailOtpAsync(string toEmail, string userName, string otp, DateTime expiry);
 
     string GetEmailTemplate(
         string title,
