@@ -9,8 +9,12 @@ using MizanERP.Infrastructure.Services;
 using MizanERP.Web.Configuration;
 using MizanERP.Web.Middleware;
 using MizanERP.Web.StartupExtensions;
+using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Host.UseSerilog((context, _, config) =>
+    config.ReadFrom.Configuration(context.Configuration));
 
 // Add services to the container.
 builder.Services.AddControllers();
@@ -99,7 +103,14 @@ app.UseHttpsRedirection();
 app.UseRouting();
 
 // ✅ Exception handling middleware
+
+app.UseMiddleware<RequestContextMiddleware>();
+
+//app.UseSerilogRequestLogging();
+
 app.UseMiddleware<ExceptionHandlingMiddleware>();
+
+
 
 app.UseAuthentication();
 app.UseAuthorization();

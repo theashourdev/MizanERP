@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using MizanERP.Application.Common;
 using MizanERP.Application.DTOs.Auth;
 using MizanERP.Application.Interfaces;
@@ -17,7 +18,7 @@ public class AuthService : IAuthService
     private readonly IConfiguration _configuration;
     private readonly IUnitOfWork _unitOfWork;
     private readonly IUserService _userService;
-
+    private readonly ILogger<AuthService> _logger;
     public AuthService(
         UserManager<ApplicationUser> userManager,
         SignInManager<ApplicationUser> signInManager,
@@ -25,7 +26,8 @@ public class AuthService : IAuthService
         IEmailService emailService,
         IConfiguration configuration,
         IUnitOfWork unitOfWork,
-        IUserService userService)
+        IUserService userService,
+        ILogger<AuthService> logger)
     {
         _userManager = userManager;
         _signInManager = signInManager;
@@ -34,6 +36,7 @@ public class AuthService : IAuthService
         _configuration = configuration;
         _unitOfWork = unitOfWork;
         _userService = userService;
+        _logger = logger;
     }
 
     // ─── Login ────────────────────────────────────────────────────────────────
@@ -43,6 +46,8 @@ public class AuthService : IAuthService
 
         if (user == null)
             return ApiResponse<LoginResponseDto>.Fail("Invalid email or password.");
+
+
 
         if (!user.IsActive)
             return ApiResponse<LoginResponseDto>.Fail("Your account is inactive.");
@@ -66,6 +71,7 @@ public class AuthService : IAuthService
         var accessToken = _jwtService.GenerateAccessToken(user, roles);
 
         await _userManager.UpdateAsync(user);
+
 
         return ApiResponse<LoginResponseDto>.Ok(new LoginResponseDto
         {
