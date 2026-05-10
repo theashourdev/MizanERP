@@ -1,9 +1,11 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿using MailKit.Security;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using MimeKit;
 using MizanERP.Application.Interfaces;
 using System.Net;
-using System.Net.Mail;
-
+using MailKitSmtpClient = MailKit.Net.Smtp;
+using SystemSmtpClient = System.Net.Mail;
 namespace MizanERP.Infrastructure.Services;
 
 public class EmailService : IEmailService
@@ -103,7 +105,7 @@ public class EmailService : IEmailService
         await SendAsync(toEmail, subject, body);
     }
 
-    public async Task SendAsync(string toEmail, string subject, string htmlBody)
+    public async Task SendAsyncDefault(string toEmail, string subject, string htmlBody)
     {
         try
         {
@@ -114,15 +116,15 @@ public class EmailService : IEmailService
             var password = emailSettings["SmtpPassword"];
             var enableSsl = emailSettings.GetValue<bool>("EnableSsl", true);
 
-            using var client = new SmtpClient(host, port)
+            using var client = new SystemSmtpClient.SmtpClient(host, port)
             {
                 EnableSsl = enableSsl,
                 Credentials = new NetworkCredential(username, password)
             };
 
-            var message = new MailMessage
+            var message = new SystemSmtpClient.MailMessage
             {
-                From = new MailAddress(_fromEmail, _fromName),
+                From = new SystemSmtpClient.MailAddress(_fromEmail, _fromName),
                 Subject = subject,
                 Body = htmlBody,
                 IsBodyHtml = true
@@ -140,8 +142,56 @@ public class EmailService : IEmailService
         }
     }
 
+    public async Task SendAsync(string toEmail, string subject, string htmlBody)
+    {
+        try
+        {
+            var emailSettings = _configuration.GetSection("EmailSettings");
+
+            var host = emailSettings["SmtpHost"];
+            var port = emailSettings.GetValue<int>("SmtpPort");
+            var username = emailSettings["SmtpUsername"];
+            var password = emailSettings["SmtpPassword"];
+            var enableSsl = emailSettings.GetValue<bool>("EnableSsl");
+
+            var email = new MimeMessage();
+
+            email.From.Add(new MailboxAddress(_fromName, _fromEmail));
+
+            email.To.Add(MailboxAddress.Parse(toEmail));
+
+            email.Subject = subject;
+
+            email.Body = new BodyBuilder
+            {
+                HtmlBody = htmlBody
+            }.ToMessageBody();
+
+            using var smtp = new MailKitSmtpClient.SmtpClient();
+
+            await smtp.ConnectAsync(
+                host,
+                port,
+                SecureSocketOptions.StartTls);
+
+            await smtp.AuthenticateAsync(username, password);
+
+            await smtp.SendAsync(email);
+
+            await smtp.DisconnectAsync(true);
+
+            _logger.LogInformation(
+                "Email sent to {Email}",
+                toEmail);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, ex.Message);
+            throw;
+        }
+    }
     // ─── HTML Email Template ──────────────────────────────────────────────────
-    private string GetEmailTemplate(
+    public string GetEmailTemplate(
         string title,
         string greeting,
         string content,

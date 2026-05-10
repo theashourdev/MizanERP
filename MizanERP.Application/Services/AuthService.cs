@@ -14,19 +14,22 @@ public class AuthService : IAuthService
     private readonly IJwtService _jwtService;
     private readonly IEmailService _emailService;
     private readonly IConfiguration _configuration;
+    private readonly IUnitOfWork _unitOfWork;
 
     public AuthService(
         UserManager<ApplicationUser> userManager,
         SignInManager<ApplicationUser> signInManager,
         IJwtService jwtService,
         IEmailService emailService,
-        IConfiguration configuration)
+        IConfiguration configuration,
+        IUnitOfWork unitOfWork)
     {
         _userManager = userManager;
         _signInManager = signInManager;
         _jwtService = jwtService;
         _emailService = emailService;
         _configuration = configuration;
+        _unitOfWork = unitOfWork;
     }
 
     // ─── Login ────────────────────────────────────────────────────────────────
@@ -78,36 +81,56 @@ public class AuthService : IAuthService
     // ─── Register ─────────────────────────────────────────────────────────────
     public async Task<ApiResponse> RegisterAsync(RegisterRequestDto request)
     {
-        var existingUser = await _userManager.FindByEmailAsync(request.Email);
-        if (existingUser != null)
-            return ApiResponse.Fail("Email is already registered.");
+        using var transaction = _unitOfWork.BeginTransactionAsync();
 
-        var user = new ApplicationUser
+        try
         {
-            FirstName = request.FirstName,
-            LastName = request.LastName,
-            Email = request.Email,
-            UserName = request.Email,
-            PhoneNumber = request.PhoneNumber,
-        };
+            var existingUser = await _userManager.FindByEmailAsync(request.Email);
+            if (existingUser != null)
+                return ApiResponse.Fail("Email is already registered.");
 
-        var result = await _userManager.CreateAsync(user, request.Password);
+            var user = new ApplicationUser
+            {
+                FirstName = request.FirstName,
+                LastName = request.LastName,
+                Email = request.Email,
+                UserName = request.Email,
+                PhoneNumber = request.PhoneNumber,
+            };
 
-        if (!result.Succeeded)
-            return ApiResponse.Fail("Registration failed.", result.Errors.Select(e => e.Description).ToList());
+            var result = await _userManager.CreateAsync(user, request.Password);
 
-        // Assign default role
-        var defaultRole = _configuration["AppSettings:DefaultRole"] ?? "User";
-        await _userManager.AddToRoleAsync(user, defaultRole);
+            if (!result.Succeeded)
+                return ApiResponse.Fail("Registration failed.", result.Errors.Select(e => e.Description).ToList());
 
-        // Send email verification
-        var token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
-        var clientUrl = _configuration["AppSettings:ClientUrl"];
-        var verificationLink = $"{clientUrl}/verify-email?userId={user.Id}&token={Uri.EscapeDataString(token)}";
+            var defaultRole = _configuration["AppSettings:DefaultRole"] ?? "TestUser";
 
-        await _emailService.SendEmailVerificationAsync(user.Email!, user.FullName, verificationLink);
+            var roleResult = await _userManager.AddToRoleAsync(user, defaultRole);
 
-        return ApiResponse.Ok("Registration successful. Please check your email to verify your account.");
+            if (!roleResult.Succeeded)
+                return ApiResponse.Fail("Failed to assign role.", roleResult.Errors.Select(e => e.Description).ToList());
+
+            var token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
+
+            var clientUrl = _configuration["AppSettings:ClientUrl"];
+            var verificationLink =
+                $"{clientUrl}/verify-email?userId={user.Id}&token={Uri.EscapeDataString(token)}";
+
+            await _emailService.SendEmailVerificationAsync(
+                user.Email!,
+                user.FullName,
+                verificationLink);
+
+            await _unitOfWork.CommitAsync();
+
+            return ApiResponse.Ok("Registration successful. Please check your email.");
+        }
+        catch (Exception ex)
+        {
+            await _unitOfWork.RollbackAsync();
+
+            return ApiResponse.Fail("Something went wrong", ex.Message);
+        }
     }
 
 

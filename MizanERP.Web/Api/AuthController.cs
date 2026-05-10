@@ -65,6 +65,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MizanERP.Application.DTOs.Auth;
 using MizanERP.Application.Interfaces;
+using System.ComponentModel.DataAnnotations;
 
 namespace MizanERP.Web.Controllers;
 
@@ -74,10 +75,12 @@ namespace MizanERP.Web.Controllers;
 public class AuthController : ControllerBase
 {
     private readonly IAuthService _authService;
+    private readonly IEmailService _emailService;
 
-    public AuthController(IAuthService authService)
+    public AuthController(IAuthService authService, IEmailService emailService)
     {
         _authService = authService;
+        _emailService = emailService;
     }
 
     private string IpAddress =>
@@ -160,5 +163,23 @@ public class AuthController : ControllerBase
     {
         var result = await _authService.ResendVerificationEmailAsync(request.Email);
         return Ok(result);
+    }
+
+    [HttpPost("send-email")]
+    public async Task<IActionResult> SendEmail([FromForm] string name = "Ashour", [FromForm][EmailAddress] string email = "theashour.x@gmail.com")
+    {
+        var subject = $"Welcome Email";
+        var body = _emailService.GetEmailTemplate(
+            "Welcome to MizanERP",
+            $"Hello {name},",
+            "Welcome to MizanERP! We're excited to have you on board.",
+            null,
+            null,
+            "Thanks for using MizanERP."
+        );
+
+
+        await _emailService.SendAsync(email, subject, body);
+        return Ok("Email Sent");
     }
 }

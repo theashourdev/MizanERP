@@ -1,5 +1,3 @@
-using System;
-using System.Threading.Tasks;
 using MizanERP.Application.Repositories;
 
 namespace MizanERP.Application
@@ -20,5 +18,9 @@ namespace MizanERP.Application
         IRoleRepository Roles { get; }
 
         Task<int> SaveChangesAsync();
+
+        Task BeginTransactionAsync();
+        Task CommitAsync();
+        Task RollbackAsync();
     }
 }

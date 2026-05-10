@@ -1,5 +1,4 @@
-using System;
-using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore.Storage;
 using MizanERP.Application;
 using MizanERP.Application.Repositories;
 using MizanERP.Infrastructure.Persistence.Repositories;
@@ -9,6 +8,8 @@ namespace MizanERP.Infrastructure.Persistence
     public class UnitOfWork : IUnitOfWork
     {
         private readonly MizanERPDbContext _context;
+        private IDbContextTransaction? _transaction;
+
         private IProductRepository? _productRepository;
         private ISupplierRepository? _supplierRepository;
         private ICustomerRepository? _customerRepository;
@@ -43,6 +44,29 @@ namespace MizanERP.Infrastructure.Persistence
         public async Task<int> SaveChangesAsync()
         {
             return await _context.SaveChangesAsync();
+        }
+
+        public async Task BeginTransactionAsync()
+        {
+            _transaction = await _context.Database.BeginTransactionAsync();
+        }
+
+        public async Task CommitAsync()
+        {
+            if (_transaction != null)
+            {
+                await _transaction.CommitAsync();
+                await _transaction.DisposeAsync();
+            }
+        }
+
+        public async Task RollbackAsync()
+        {
+            if (_transaction != null)
+            {
+                await _transaction.RollbackAsync();
+                await _transaction.DisposeAsync();
+            }
         }
 
         public void Dispose()
