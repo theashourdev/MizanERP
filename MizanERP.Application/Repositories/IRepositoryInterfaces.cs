@@ -1,5 +1,3 @@
-using System;
-using System.Threading.Tasks;
 using MizanERP.Domain.Entities;
 
 namespace MizanERP.Application.Repositories
@@ -25,4 +23,9 @@ namespace MizanERP.Application.Repositories
     public interface IAccountingEntryRepository : IGenericRepository<AccountingEntry> { }
     public interface IUserRepository : IGenericRepository<User> { }
     public interface IRoleRepository : IGenericRepository<Role> { }
+    public interface ICapitalTransactionRepository : IGenericRepository<CapitalTransaction>
+    {
+        public Task<decimal?> GetLatestAmountAsync();
+
+    }
 }

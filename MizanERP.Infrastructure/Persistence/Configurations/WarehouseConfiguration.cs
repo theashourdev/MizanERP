@@ -12,7 +12,6 @@ namespace MizanERP.Infrastructure.Persistence.Configurations
             builder.Property(x => x.Name).IsRequired().HasMaxLength(200);
             builder.Property(x => x.IsActive).IsRequired();
             builder.Property(x => x.CreatedAt).IsRequired();
-            builder.Property(x => x.UpdatedAt).IsRequired();
             builder.Property(x => x.IsDeleted).IsRequired();
             builder.OwnsOne(x => x.Address, a =>
             {

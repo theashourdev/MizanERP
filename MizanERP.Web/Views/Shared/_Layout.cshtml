@@ -32,9 +32,10 @@
                         <li class="nav-item dropdown">
                             <a class="nav-link dropdown-toggle" href="#" id="masterDataMenu" role="button" data-bs-toggle="dropdown" aria-expanded="false">Master Data</a>
                             <ul class="dropdown-menu" aria-labelledby="masterDataMenu">
-                                <li><a class="dropdown-item" href="/Product">Products</a></li>
-                                <li><a class="dropdown-item" href="/Customer">Customers</a></li>
-                                <li><a class="dropdown-item" href="/Supplier">Suppliers</a></li>
+                                <li><a class="dropdown-item" asp-action="Index" asp-controller = "Product">Products</a></li>
+                                <li><a class="dropdown-item" asp-action="Index" asp-controller = "Customer">Customers</a></li>
+                                <li><a class="dropdown-item" asp-action="Index" asp-controller = "Supplier">Suppliers</a></li>
+                                <li><a class="dropdown-item" asp-action="Index" asp-controller = "Purchase">Purchase</a></li>
                             </ul>
                         </li>
                     </ul>
@@ -68,5 +69,36 @@
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
     @await RenderSectionAsync("Scripts", required: false)
+    @await Component.InvokeAsync("Notyf")
+
+	<script>
+		(function () {
+			function dismissAll() {
+				if (typeof notyf !== 'undefined') notyf.dismissAll();
+				if (typeof toastr !== 'undefined') toastr.remove();
+			}
+
+			// Patch notyf — dismiss both before showing
+			if (typeof notyf !== 'undefined') {
+				const _nSuccess = notyf.success.bind(notyf);
+				const _nError   = notyf.error.bind(notyf);
+				notyf.success = function (p) { dismissAll(); return _nSuccess(p); };
+				notyf.error   = function (p) { dismissAll(); return _nError(p);   };
+			}
+
+			// Patch toastr — dismiss both before showing
+			if (typeof toastr !== 'undefined') {
+				const _tSuccess = toastr.success.bind(toastr);
+				const _tError   = toastr.error.bind(toastr);
+				const _tWarning = toastr.warning.bind(toastr);
+				const _tInfo    = toastr.info.bind(toastr);
+				toastr.success = function (m, t, o) { dismissAll(); return _tSuccess(m, t, o); };
+				toastr.error   = function (m, t, o) { dismissAll(); return _tError(m, t, o);   };
+				toastr.warning = function (m, t, o) { dismissAll(); return _tWarning(m, t, o); };
+				toastr.info    = function (m, t, o) { dismissAll(); return _tInfo(m, t, o);    };
+			}
+		})();
+	</script>
+
 </body>
 </html>

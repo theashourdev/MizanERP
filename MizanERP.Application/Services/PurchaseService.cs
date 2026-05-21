@@ -1,6 +1,3 @@
-using System;
-using System.Linq;
-using System.Threading.Tasks;
 using MizanERP.Application.DTOs;
 using MizanERP.Domain.Entities;
 using MizanERP.Domain.Enums;
@@ -25,14 +22,13 @@ namespace MizanERP.Application.Services
             var supplier = await _unitOfWork.Suppliers.GetByIdAsync(dto.SupplierId);
             if (supplier == null) throw new InvalidOperationException($"Supplier {dto.SupplierId} not found");
 
-            var purchaseOrder = new PurchaseOrder(Guid.NewGuid(), dto.SupplierId, dto.OrderDate);
+            // Pass BuyerId into the PurchaseOrder so it is persisted
+            var purchaseOrder = new PurchaseOrder(Guid.NewGuid(), dto.SupplierId, dto.OrderDate, dto.BuyerId);
 
             foreach (var lineDto in dto.Lines)
             {
                 var product = await _unitOfWork.Products.GetByIdAsync(lineDto.ProductId);
                 if (product == null) throw new InvalidOperationException($"Product {lineDto.ProductId} not found");
-                if (product.Type != ProductType.RawMaterial)
-                    throw new InvalidOperationException($"Product {lineDto.ProductId} is not a raw material");
 
                 var line = new PurchaseOrderLine(
                     Guid.NewGuid(),
@@ -46,6 +42,28 @@ namespace MizanERP.Application.Services
             }
 
             await _unitOfWork.PurchaseOrders.AddAsync(purchaseOrder);
+
+            // total amount of order
+            var total = purchaseOrder.GetTotal();
+
+            var latestAmount = await _unitOfWork.CapitalTransactions.GetLatestAmountAsync() ?? 0;
+
+
+            // create capital transaction record
+            var capTxn = new CapitalTransaction(
+                Guid.NewGuid(),
+                DateTime.Now,
+                Math.Abs(total.Amount - latestAmount),
+                0,
+                0,
+                Domain.Entities.TransactionType.Purchase,
+                total.Currency,
+                $"Purchase PO-{purchaseOrder.Id:N}",
+                purchaseOrder.Id
+            );
+
+            await _unitOfWork.CapitalTransactions.AddAsync(capTxn);
+
             await _unitOfWork.SaveChangesAsync();
 
             return purchaseOrder.Id;

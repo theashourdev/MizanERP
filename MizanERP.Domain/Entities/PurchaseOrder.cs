@@ -8,16 +8,18 @@ namespace MizanERP.Domain.Entities
     public class PurchaseOrder : BaseEntity
     {
         public Guid SupplierId { get; private set; }
+        public Guid? BuyerId { get; private set; }
         public DateTime OrderDate { get; private set; }
         public OrderStatus Status { get; private set; }
         public List<PurchaseOrderLine> Lines { get; private set; }
 
         private PurchaseOrder() { Lines = new List<PurchaseOrderLine>(); }
 
-        public PurchaseOrder(Guid id, Guid supplierId, DateTime orderDate)
+        public PurchaseOrder(Guid id, Guid supplierId, DateTime orderDate, Guid? buyerId = null)
         {
             Id = id;
             SupplierId = supplierId;
+            BuyerId = buyerId;
             OrderDate = orderDate;
             Status = OrderStatus.Draft;
             Lines = new List<PurchaseOrderLine>();
@@ -32,7 +34,7 @@ namespace MizanERP.Domain.Entities
 
         public Money GetTotal()
         {
-            if (Lines.Count == 0) return new Money(0, "USD"); // Default currency
+            if (Lines.Count == 0) return new Money(0, "EGP"); // Default currency
             var currency = Lines[0].Price.Currency;
             decimal total = 0;
             foreach (var line in Lines)
@@ -92,7 +94,7 @@ namespace MizanERP.Domain.Entities
         public Quantity Quantity { get; private set; }
         public Money Price { get; private set; }
 
-        private PurchaseOrderLine() { Quantity = new Quantity(0, string.Empty); Price = new Money(0, "USD"); }
+        private PurchaseOrderLine() { Quantity = new Quantity(0, "pcs"); Price = new Money(0, "EGP"); }
 
         public PurchaseOrderLine(Guid id, Guid purchaseOrderId, Guid productId, Quantity quantity, Money price)
         {

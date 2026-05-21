@@ -28,6 +28,7 @@ namespace MizanERP.Infrastructure
             services.AddScoped<IAccountingEntryRepository, AccountingEntryRepository>();
             services.AddScoped<IUserRepository, UserRepository>();
             services.AddScoped<IRoleRepository, RoleRepository>();
+            services.AddScoped<ICapitalTransactionRepository, CapitalTransactionRepository>();
 
             return services;
         }

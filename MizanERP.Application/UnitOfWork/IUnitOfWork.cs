@@ -16,6 +16,7 @@ namespace MizanERP.Application
         IAccountingEntryRepository AccountingEntries { get; }
         IUserRepository Users { get; }
         IRoleRepository Roles { get; }
+        ICapitalTransactionRepository CapitalTransactions { get; }
 
         Task<int> SaveChangesAsync();
 

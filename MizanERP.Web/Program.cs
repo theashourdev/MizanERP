@@ -1,3 +1,4 @@
+using AspNetCoreHero.ToastNotification;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using MizanERP.Application.Interfaces;
@@ -24,6 +25,34 @@ builder.Services.AddRazorPages();
 // ✅ DB Context
 builder.Services.AddDbContext<MizanERPDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+
+var notyfSettings = builder.Configuration.GetSection("NotyfSettings").Get<NotyfSettings>()
+            ?? new NotyfSettings
+            {
+                DurationInSeconds = 5,
+                IsDismissable = true,
+                Position = "TopRight"
+            };
+
+if (!Enum.TryParse<NotyfPosition>(notyfSettings.Position, true, out var position))
+{
+    position = NotyfPosition.TopRight;
+}
+
+builder.Services.AddNotyf(config =>
+{
+    config.DurationInSeconds = notyfSettings.DurationInSeconds > 0
+        ? notyfSettings.DurationInSeconds
+        : 5;
+
+    config.IsDismissable = notyfSettings.IsDismissable;
+    config.Position = position;
+});
+
+
+
+
 
 // ✅ Identity
 builder.Services.AddIdentity<ApplicationUser, IdentityRole<Guid>>(options =>

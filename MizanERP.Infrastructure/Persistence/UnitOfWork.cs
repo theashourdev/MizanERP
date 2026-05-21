@@ -22,6 +22,7 @@ namespace MizanERP.Infrastructure.Persistence
         private IAccountingEntryRepository? _accountingEntryRepository;
         private IUserRepository? _userRepository;
         private IRoleRepository? _roleRepository;
+        private ICapitalTransactionRepository? _capitalTransactionRepository;
 
         public UnitOfWork(MizanERPDbContext context)
         {
@@ -40,6 +41,7 @@ namespace MizanERP.Infrastructure.Persistence
         public IAccountingEntryRepository AccountingEntries => _accountingEntryRepository ??= new AccountingEntryRepository(_context);
         public IUserRepository Users => _userRepository ??= new UserRepository(_context);
         public IRoleRepository Roles => _roleRepository ??= new RoleRepository(_context);
+        public ICapitalTransactionRepository CapitalTransactions => _capitalTransactionRepository ??= new CapitalTransactionRepository(_context);
 
         public async Task<int> SaveChangesAsync()
         {

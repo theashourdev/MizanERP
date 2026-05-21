@@ -1,5 +1,6 @@
 using System;
 using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
 using MizanERP.Application.Repositories;
 using MizanERP.Domain.Entities;
 
@@ -16,12 +17,16 @@ namespace MizanERP.Infrastructure.Persistence.Repositories
 
         public async Task<PurchaseOrder?> GetByIdAsync(Guid id)
         {
-            return await _context.PurchaseOrders.FindAsync(id);
+            return await _context.PurchaseOrders
+                .Include(p => p.Lines)
+                .FirstOrDefaultAsync(p => p.Id == id);
         }
 
         public async Task<List<PurchaseOrder>> GetAllAsync()
         {
-            return await Task.FromResult(_context.PurchaseOrders.ToList());
+            return await _context.PurchaseOrders
+                .Include(p => p.Lines)
+                .ToListAsync();
         }
 
         public async Task AddAsync(PurchaseOrder entity)

@@ -12,7 +12,6 @@ namespace MizanERP.Infrastructure.Persistence.Configurations
             builder.Property(x => x.UserName).IsRequired().HasMaxLength(100);
             builder.Property(x => x.IsActive).IsRequired();
             builder.Property(x => x.CreatedAt).IsRequired();
-            builder.Property(x => x.UpdatedAt).IsRequired();
             builder.Property(x => x.IsDeleted).IsRequired();
             builder.HasMany(typeof(Role), "Roles").WithMany();
         }
@@ -25,7 +24,6 @@ namespace MizanERP.Infrastructure.Persistence.Configurations
             builder.HasKey(x => x.Id);
             builder.Property(x => x.Name).IsRequired().HasMaxLength(100);
             builder.Property(x => x.CreatedAt).IsRequired();
-            builder.Property(x => x.UpdatedAt).IsRequired();
             builder.Property(x => x.IsDeleted).IsRequired();
         }
     }

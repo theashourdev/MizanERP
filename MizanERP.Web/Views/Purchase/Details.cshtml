@@ -1,0 +1,89 @@
+@model MizanERP.Domain.Entities.PurchaseOrder
+
+@{
+    ViewData["Title"] = "Purchase Details";
+}
+
+<style>
+    .invoice-card { background:#fff; border-radius:12px; padding:18px; border:1px solid #e6e6ef; }
+    .invoice-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; }
+    .invoice-meta { text-align:right; }
+    .table-items th, .table-items td { vertical-align:middle; }
+    .supplier-badge { font-weight:700; color:#374151; }
+    @@media print {
+        .no-print { display:none !important; }
+        body { background: #fff; }
+    }
+</style>
+
+<div class="container" style="max-width:900px; padding-top:12px;">
+    <div class="invoice-card">
+        <div class="invoice-header">
+            <div>
+                <h4 style="margin:0;">Purchase Invoice</h4>
+                @* <div class="text-muted">ID: @Model.Id</div> *@
+            </div>
+            <div class="invoice-meta">
+                <div><strong>Date:</strong> @Model.OrderDate.ToString("yyyy-MM-dd")</div>
+                <div><strong>Supplier:</strong> <span class="supplier-badge">@ViewBag.SupplierName</span></div>
+                <div><strong>Status:</strong> @Model.Status</div>
+            </div>
+        </div>
+
+        <hr />
+
+        <table class="table table-sm table-items">
+            <thead>
+                <tr>
+                    <th style="width:35%">Product</th>
+                    <th style="width:15%" class="text-end">Code / Unit</th>
+                    <th style="width:15%" class="text-end">Quantity</th>
+                    <th style="width:15%" class="text-end">Unit Price</th>
+                    <th style="width:20%" class="text-end">Line Total</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var line in Model.Lines)
+                {
+                    var product = ViewBag.ProductMap != null && ((Dictionary<Guid, MizanERP.Domain.Entities.Product>)ViewBag.ProductMap).ContainsKey(line.ProductId)
+                        ? ((Dictionary<Guid, MizanERP.Domain.Entities.Product>)ViewBag.ProductMap)[line.ProductId]
+                        : null;
+
+                    var productName = product != null ? product.Name : "Unknown product";
+                    var productCode = product != null ? product.Code ?? "" : "";
+                    var productUnit = product != null ? product.Unit : "";
+
+                    <tr>
+                        <td>
+                            <div class="fw-bold">@productName</div>
+                            <div class="text-muted" style="font-size:.85rem;">@(product != null ? (string.IsNullOrWhiteSpace(product.Code) ? "" : "SKU: " + product.Code) : "")</div>
+                        </td>
+                        <td class="text-end">@productCode / @productUnit</td>
+                        <td class="text-end">@line.Quantity.Value.ToString("N2")</td>
+                        <td class="text-end">@line.Price.Amount.ToString("N2") @line.Price.Currency</td>
+                        <td class="text-end">@((line.Price.Amount * line.Quantity.Value).ToString("N2")) @line.Price.Currency</td>
+                    </tr>
+                }
+            </tbody>
+            <tfoot>
+                <tr>
+                    <th colspan="4" class="text-end">Subtotal</th>
+                    <th class="text-end">@Model.GetTotal().Amount.ToString("N2") @Model.GetTotal().Currency</th>
+                </tr>
+            </tfoot>
+        </table>
+
+        <div class="d-flex justify-content-between mt-3">
+            <div>
+                @* <strong>Notes</strong> *@
+                <div class="text-muted">Time: @Model.UpdatedAt</div>
+            </div>
+        </div>
+
+        <div class="mt-4 no-print">
+            <a class="btn btn-outline-secondary" asp-action="Index">Back</a>
+            @* <a class="btn btn-primary" href="@Url.Action("Details", new { id = Model.Id, print = true })">Open Printable</a> *@
+            <button class="btn btn-success" onclick="window.print()">Print Invoice</button>
+        </div>
+    </div>
+</div>

@@ -1,7 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using MizanERP.Domain.Entities;
-using MizanERP.Domain.ValueObjects;
 
 namespace MizanERP.Infrastructure.Persistence.Configurations
 {
@@ -14,7 +13,6 @@ namespace MizanERP.Infrastructure.Persistence.Configurations
             builder.Property(x => x.OrderDate).IsRequired();
             builder.Property(x => x.Status).IsRequired();
             builder.Property(x => x.CreatedAt).IsRequired();
-            builder.Property(x => x.UpdatedAt).IsRequired();
             builder.Property(x => x.IsDeleted).IsRequired();
             builder.HasMany(typeof(PurchaseOrderLine), "Lines").WithOne().HasForeignKey("PurchaseOrderId");
         }
@@ -28,7 +26,6 @@ namespace MizanERP.Infrastructure.Persistence.Configurations
             builder.Property(x => x.PurchaseOrderId).IsRequired();
             builder.Property(x => x.ProductId).IsRequired();
             builder.Property(x => x.CreatedAt).IsRequired();
-            builder.Property(x => x.UpdatedAt).IsRequired();
             builder.Property(x => x.IsDeleted).IsRequired();
             builder.OwnsOne(x => x.Quantity, q =>
             {

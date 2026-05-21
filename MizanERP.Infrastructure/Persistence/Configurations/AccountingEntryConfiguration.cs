@@ -15,7 +15,6 @@ namespace MizanERP.Infrastructure.Persistence.Configurations
             builder.Property(x => x.Credit).HasColumnType("decimal(18,2)").IsRequired();
             builder.Property(x => x.Reference).HasMaxLength(100);
             builder.Property(x => x.CreatedAt).IsRequired();
-            builder.Property(x => x.UpdatedAt).IsRequired();
             builder.Property(x => x.IsDeleted).IsRequired();
         }
     }
