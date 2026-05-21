@@ -24,6 +24,7 @@ namespace MizanERP.Infrastructure.Persistence
         public DbSet<AccountingEntry> AccountingEntries => Set<AccountingEntry>();
         public DbSet<User> Users => Set<User>();
         public DbSet<Role> Roles => Set<Role>();
+        public DbSet<CapitalTransaction> CapitalTransactions => Set<CapitalTransaction>();
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

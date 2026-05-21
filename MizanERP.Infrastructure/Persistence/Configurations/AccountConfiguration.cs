@@ -13,7 +13,6 @@ namespace MizanERP.Infrastructure.Persistence.Configurations
             builder.Property(x => x.Type).IsRequired();
             builder.Property(x => x.IsActive).IsRequired();
             builder.Property(x => x.CreatedAt).IsRequired();
-            builder.Property(x => x.UpdatedAt).IsRequired();
             builder.Property(x => x.IsDeleted).IsRequired();
         }
     }

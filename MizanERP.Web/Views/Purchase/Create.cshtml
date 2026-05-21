@@ -1,0 +1,294 @@
+@model MizanERP.Application.DTOs.CreatePurchaseOrderDto
+
+@{
+    ViewData["Title"] = "Create Purchase";
+}
+
+<style>
+    /* Reuse style tokens from supplier create to match UI */
+    :root {
+        --f-accent:       #4f6ef7;
+        --f-accent-soft:  #eef0fe;
+        --f-text:         #1a1d23;
+        --f-muted:        #6b7280;
+        --f-border:       #e5e7eb;
+        --f-border-focus: #4f6ef7;
+        --f-surface:      #ffffff;
+        --f-bg:           #f7f8fc;
+    }
+    .f-card { background: var(--f-surface); border-radius: 18px; border: 1.5px solid var(--f-border); }
+    .f-card-stripe { height:4px; background: linear-gradient(90deg,var(--f-accent) 0%, #818cf8 100%); }
+    .f-card-inner { padding: 24px; }
+    .f-title { font-size:1.3rem; font-weight:700; color:var(--f-text); }
+    .f-subtitle { color:var(--f-muted); margin-bottom:18px; }
+    .f-label { display:block; font-weight:600; margin-bottom:6px; }
+    .text-danger { font-size:.85rem; }
+    .line-total { font-weight:700; }
+    .summary-card { background:#fafafa; border:1px solid var(--f-border); border-radius:10px; padding:12px; }
+</style>
+
+<div class="container" style="max-width:820px; padding-top:12px;">
+    <a class="f-back" asp-action="Index">
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+        Back to Purchases
+    </a>
+
+    <div class="f-card mt-3">
+        <div class="f-card-stripe"></div>
+        <div class="f-card-inner">
+            <div class="d-flex justify-content-between align-items-start mb-2">
+                <div>
+                    <div class="f-title">New Purchase</div>
+                    <div class="f-subtitle">Create a purchase order and record capital transaction.</div>
+                </div>
+            </div>
+
+            <form asp-action="Create" method="post" id="purchase-form">
+                @Html.AntiForgeryToken()
+
+                <div class="row">
+                    <div class="col-md-8">
+                        <!-- Basic Info -->
+                        <div class="mb-3">
+                            <label asp-for="SupplierId" class="f-label">Supplier <span class="text-danger">*</span></label>
+                            <select asp-for="SupplierId" class="form-select" id="SupplierId" required>
+                                <option value="">Select supplier</option>
+                                @foreach (var s in (IEnumerable<MizanERP.Domain.Entities.Supplier>)ViewBag.Suppliers)
+                                {
+                                    <option value="@s.Id">@s.Name</option>
+                                }
+                            </select>
+                            <span id="supplier-error" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="f-label">Buyer / Employee <span class="text-danger">*</span></label>
+                            <select name="BuyerId" id="BuyerId" class="form-select" required>
+                                <option value="">Select buyer</option>
+                                @foreach (var u in (IEnumerable<MizanERP.Domain.Entities.User>)ViewBag.Users ?? Enumerable.Empty<MizanERP.Domain.Entities.User>())
+                                {
+                                    <option value="@u.Id">@u.UserName</option>
+                                }
+                            </select>
+                            <span id="buyer-error" class="text-danger"></span>
+                        </div>
+
+                        <div class="row g-3">
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="OrderDate" class="f-label">Purchase Date</label>
+                                <input asp-for="OrderDate" class="form-control" type="date" />
+                                <span asp-validation-for="OrderDate" class="text-danger"></span>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="f-label">Notes <span class="opt" style="font-weight:400;font-size:.85rem;color:#9ca3af">(optional)</span></label>
+                                <input name="Notes" class="form-control" placeholder="Short notes or reference" />
+                            </div>
+                        </div>
+
+                        <!-- Lines -->
+                        <div class="f-section mt-3 mb-2">
+                            <div class="f-section-icon" style="background:var(--f-accent-soft);color:var(--f-accent);border-radius:8px;padding:8px;">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M3 7h18M3 12h18M3 17h18"/></svg>
+                            </div>
+                            <span class="f-section-label">Items</span>
+                            <div class="f-section-line" style="height:1px;background:var(--f-border);"></div>
+                        </div>
+
+                        <div class="table-responsive">
+                            <table class="table table-sm" id="lines-table">
+                                <thead>
+                                    <tr>
+                                        <th style="width:40%">Product <span class="text-danger">*</span></th>
+                                        <th style="width:15%">Quantity <span class="text-danger">*</span></th>
+                                        <th style="width:18%">Unit Price <span class="text-danger">*</span></th>
+                                        <th style="width:15%">Line Total</th>
+                                        <th style="width:12%"></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div class="mb-3">
+                            <button type="button" id="add-line" class="btn btn-outline-secondary btn-sm">Add Item</button>
+                        </div>
+
+                        <div class="d-flex justify-content-between mt-4">
+                            <a asp-action="Index" class="btn btn-cancel">Cancel</a>
+                            <button type="submit" id="save-btn" class="btn btn-submit">Save Purchase</button>
+                        </div>
+
+                    </div>
+
+                    <div class="col-md-4">
+                        <div class="summary-card mb-3">
+                            <div class="mb-2"><strong>Current Balance</strong></div>
+                            <div class="h4" id="current-balance">@((ViewBag.CurrentBalance ?? 0).ToString("N2"))</div>
+                            <small class="text-muted">Available capital</small>
+                        </div>
+
+                        <div class="summary-card">
+                            <div class="mb-2"><strong>Purchase Total</strong></div>
+                            <div class="h4" id="purchase-total">0.00</div>
+                            <small class="text-muted">Grand total of all items</small>
+                        </div>
+
+                        <div class="summary-card mt-3">
+                            <div class="mb-2"><strong>Remaining Balance (Preview)</strong></div>
+                            <div class="h4" id="remaining-balance">@((ViewBag.CurrentBalance ?? 0).ToString("N2"))</div>
+                            <small class="text-muted">Current balance minus purchase total</small>
+                        </div>
+
+                    </div>
+                </div>
+
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+
+    @{
+        var prodList = ((IEnumerable<MizanERP.Domain.Entities.Product>)ViewBag.Products ?? Enumerable.Empty<MizanERP.Domain.Entities.Product>())
+                        .Select(p => new { Id = p.Id, Name = p.Name, Unit = p.Unit })
+                        .ToList();
+        var productsJson = System.Text.Json.JsonSerializer.Serialize(prodList);
+
+        var currentBalance = (ViewBag.CurrentBalance ?? 0m);
+    }
+
+    <script>
+        const products = @Html.Raw(productsJson);
+        const currentBalance = parseFloat('@currentBalance');
+
+        function lineHtml(index) {
+            return `
+                <tr data-index="${index}">
+                    <td>
+                        <select name="Lines[${index}].ProductId" class="form-select line-product" required>
+                            <option value="">Select product</option>
+                            ${products.map(p => `<option value="${p.Id}">${p.Name}</option>`).join('')}
+                        </select>
+                        <div class="text-danger field-error product-error" style="display:none;font-size:.85rem;margin-top:4px;"></div>
+                    </td>
+                    <td>
+                        <input name="Lines[${index}].Quantity" type="number" step="any" class="form-control line-qty" min="0.0001" value="1" required />
+                        <div class="text-danger field-error qty-error" style="display:none;font-size:.85rem;margin-top:4px;"></div>
+                    </td>
+                    <td>
+                        <input name="Lines[${index}].Price" type="number" step="0.01" class="form-control line-price" min="0" value="0.00" required />
+                        <div class="text-danger field-error price-error" style="display:none;font-size:.85rem;margin-top:4px;"></div>
+                    </td>
+                    <td class="align-middle line-total">0.00</td>
+                    <td>
+                        <button type="button" class="btn btn-sm btn-danger remove-line">Remove</button>
+                    </td>
+                </tr>
+            `;
+        }
+
+        function recalcTotals() {
+            let total = 0;
+            document.querySelectorAll('#lines-table tbody tr').forEach(row => {
+                const qtyEl = row.querySelector('.line-qty');
+                const priceEl = row.querySelector('.line-price');
+                const qty = parseFloat(qtyEl?.value || '0') || 0;
+                const price = parseFloat(priceEl?.value || '0') || 0;
+                const lineTotal = qty * price;
+                row.querySelector('.line-total').textContent = lineTotal.toFixed(2);
+                total += lineTotal;
+            });
+            document.getElementById('purchase-total').textContent = total.toFixed(2);
+            const rem = (currentBalance - total) || 0;
+            document.getElementById('remaining-balance').textContent = rem.toFixed(2);
+            return total;
+        }
+
+        document.getElementById('add-line').addEventListener('click', () => {
+            const tbody = document.querySelector('#lines-table tbody');
+            const index = tbody.children.length;
+            tbody.insertAdjacentHTML('beforeend', lineHtml(index));
+            recalcTotals();
+        });
+
+        document.querySelector('#lines-table').addEventListener('input', (e) => {
+            if (e.target.matches('.line-qty') || e.target.matches('.line-price')) {
+                recalcTotals();
+            }
+        });
+
+        document.querySelector('#lines-table').addEventListener('click', (e) => {
+            if (e.target.classList.contains('remove-line')) {
+                e.target.closest('tr').remove();
+                // re-index name attributes to keep model binding consistent
+                const rows = Array.from(document.querySelectorAll('#lines-table tbody tr'));
+                rows.forEach((r, i) => {
+                    r.setAttribute('data-index', i);
+                    r.querySelectorAll('[name]').forEach(el => {
+                        const name = el.getAttribute('name');
+                        const newName = name.replace(/Lines\[\d+\]/, `Lines[${i}]`);
+                        el.setAttribute('name', newName);
+                    });
+                });
+                recalcTotals();
+            }
+        });
+
+        // Basic client-side validation before submit
+        document.getElementById('purchase-form').addEventListener('submit', (e) => {
+            // clear previous errors
+            document.getElementById('supplier-error').textContent = '';
+            document.getElementById('buyer-error').textContent = '';
+            let hasError = false;
+
+            const supplier = document.getElementById('SupplierId').value;
+            if (!supplier) {
+                document.getElementById('supplier-error').textContent = 'Supplier is required.';
+                hasError = true;
+            }
+
+            const buyer = document.getElementById('BuyerId').value;
+            if (!buyer) {
+                document.getElementById('buyer-error').textContent = 'Buyer is required.';
+                hasError = true;
+            }
+
+            const rows = document.querySelectorAll('#lines-table tbody tr');
+            if (rows.length === 0) {
+                alert('Add at least one purchase item.');
+                hasError = true;
+            }
+
+            rows.forEach(row => {
+                const product = row.querySelector('.line-product').value;
+                const qty = parseFloat(row.querySelector('.line-qty').value || '0');
+                const price = parseFloat(row.querySelector('.line-price').value || '0');
+
+                row.querySelectorAll('.field-error').forEach(fe => fe.style.display = 'none');
+
+                if (!product) {
+                    const el = row.querySelector('.product-error'); el.textContent = 'Product required.'; el.style.display = 'block'; hasError = true;
+                }
+                if (!(qty > 0)) {
+                    const el = row.querySelector('.qty-error'); el.textContent = 'Quantity must be greater than zero.'; el.style.display = 'block'; hasError = true;
+                }
+                if (!(price > 0)) {
+                    const el = row.querySelector('.price-error'); el.textContent = 'Unit price must be greater than zero.'; el.style.display = 'block'; hasError = true;
+                }
+            });
+
+            if (hasError) {
+                e.preventDefault();
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+
+            // otherwise allow submit; server will handle persistence and redirect
+        });
+
+        // initialize with one empty row
+        document.getElementById('add-line').click();
+    </script>
+}

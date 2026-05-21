@@ -1,7 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using MizanERP.Domain.Entities;
-using MizanERP.Domain.ValueObjects;
 
 namespace MizanERP.Infrastructure.Persistence.Configurations
 {
@@ -15,7 +14,6 @@ namespace MizanERP.Infrastructure.Persistence.Configurations
             builder.Property(x => x.Date).IsRequired();
             builder.Property(x => x.Reference).HasMaxLength(100);
             builder.Property(x => x.CreatedAt).IsRequired();
-            builder.Property(x => x.UpdatedAt).IsRequired();
             builder.Property(x => x.IsDeleted).IsRequired();
             builder.OwnsOne(x => x.Quantity, q =>
             {

@@ -13,7 +13,6 @@ namespace MizanERP.Infrastructure.Persistence.Configurations
             builder.Property(x => x.OrderDate).IsRequired();
             builder.Property(x => x.Status).IsRequired();
             builder.Property(x => x.CreatedAt).IsRequired();
-            builder.Property(x => x.UpdatedAt).IsRequired();
             builder.Property(x => x.IsDeleted).IsRequired();
             builder.HasMany(typeof(SalesOrderLine), "Lines").WithOne().HasForeignKey("SalesOrderId");
         }
@@ -27,7 +26,6 @@ namespace MizanERP.Infrastructure.Persistence.Configurations
             builder.Property(x => x.SalesOrderId).IsRequired();
             builder.Property(x => x.ProductId).IsRequired();
             builder.Property(x => x.CreatedAt).IsRequired();
-            builder.Property(x => x.UpdatedAt).IsRequired();
             builder.Property(x => x.IsDeleted).IsRequired();
             builder.OwnsOne(x => x.Quantity, q =>
             {

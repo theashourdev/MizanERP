@@ -3,7 +3,9 @@ namespace MizanERP.Application.DTOs
     public class CreatePurchaseOrderDto
     {
         public Guid SupplierId { get; set; }
+        public Guid? BuyerId { get; set; }
         public DateTime OrderDate { get; set; }
+        public string? Notes { get; set; }
         public List<CreatePurchaseOrderLineDto> Lines { get; set; } = new();
     }
     public class CreatePurchaseOrderLineDto
