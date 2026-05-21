@@ -9,7 +9,7 @@ namespace MizanERP.Domain.ValueObjects
         public string PostalCode { get; }
         public string Country { get; }
 
-        private Address() { }
+        public Address() { }
 
         public Address(string line1, string city, string state, string postalCode, string country, string? line2 = null)
         {

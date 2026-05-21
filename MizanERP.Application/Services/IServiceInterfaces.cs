@@ -7,8 +7,8 @@ namespace MizanERP.Application.Services
         Task<Guid> CreateProductAsync(CreateProductDto dto);
         Task UpdateProductAsync(Guid productId, UpdateProductDto dto);
         Task DeleteProductAsync(Guid productId);
-        Task<object?> GetProductByIdAsync(Guid productId);
-        Task<List<object>> GetAllProductsAsync();
+        Task<ProductDto?> GetProductByIdAsync(Guid productId);
+        Task<List<ProductDto>> GetAllProductsAsync();
     }
 
     public interface IInventoryService

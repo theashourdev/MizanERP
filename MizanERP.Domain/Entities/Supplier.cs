@@ -10,7 +10,7 @@ namespace MizanERP.Domain.Entities
         public string? ContactInfo { get; private set; }
         public bool IsActive { get; private set; }
 
-        private Supplier() { Name = string.Empty; }
+        public Supplier() { Name = string.Empty; }
 
         public Supplier(Guid id, string name, Address? address = null, string? contactInfo = null)
         {
@@ -22,7 +22,28 @@ namespace MizanERP.Domain.Entities
             ContactInfo = contactInfo;
             IsActive = true;
         }
+
         public void Deactivate() { IsActive = false; UpdatedAt = DateTime.UtcNow; }
         public void Activate() { IsActive = true; UpdatedAt = DateTime.UtcNow; }
+
+        // Domain update methods
+        public void UpdateName(string name)
+        {
+            if (string.IsNullOrWhiteSpace(name)) throw new ArgumentException("Supplier name is required");
+            Name = name;
+            UpdatedAt = DateTime.UtcNow;
+        }
+
+        public void UpdateContactInfo(string? contactInfo)
+        {
+            ContactInfo = contactInfo;
+            UpdatedAt = DateTime.UtcNow;
+        }
+
+        public void UpdateAddress(Address? address)
+        {
+            Address = address;
+            UpdatedAt = DateTime.UtcNow;
+        }
     }
 }
