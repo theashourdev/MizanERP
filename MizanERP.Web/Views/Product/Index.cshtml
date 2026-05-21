@@ -1,0 +1,129 @@
+@using MizanERP.Application.DTOs
+@model IEnumerable<ProductDto>
+
+@{
+    ViewData["Title"] = "Products";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+        <h1 class="mb-0">Products</h1>
+        <small class="text-muted">Manage products in your catalog</small>
+    </div>
+    <div class="d-flex gap-2">
+        <input id="searchInput" class="form-control" style="min-width:260px" placeholder="Search products..." />
+        <select id="pageSize" class="form-select" style="width:120px">
+            <option value="5">5 / page</option>
+            <option value="10" selected>10 / page</option>
+            <option value="25">25 / page</option>
+            <option value="50">50 / page</option>
+        </select>
+        <a class="btn btn-primary" asp-action="Create">Create Product</a>
+    </div>
+</div>
+
+<div class="card shadow-sm mb-4">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table id="productsTable" class="table table-hover table-sm mb-0 align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th class="text-start">Code</th>
+                        <th class="text-start">Name</th>
+                        <th class="text-start">Type</th>
+                        <th class="text-start">Unit</th>
+                        <th class="text-end">Quantity</th>
+                        <th class="text-center">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var p in Model)
+                    {
+                        <tr class="product-row">
+                            <td>@p.Code</td>
+                            <td>@p.Name</td>
+                            <td>
+                                @if (p.Type.ToString() == "RawMaterial")
+                                {
+                                    <span class="badge bg-secondary">Raw Material</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-success">Finished Good</span>
+                                }
+                            </td>
+                            <td>@p.Unit</td>
+                            <td class="text-end">@p.InventoryQuantity</td>
+                            <td class="text-center">
+                                <a class="btn btn-sm btn-outline-primary" asp-action="Details" asp-route-id="@p.Id">View</a>
+                                @* <a class="btn btn-sm btn-outline-secondary" asp-controller="Api/Products" asp-action="Get" asp-route-id="@p.Id">API</a> *@
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <div class="card-footer bg-white d-flex justify-content-between align-items-center">
+        <div>
+            <small class="text-muted">Showing <span id="shownCount"></span> of @Model.Count()</small>
+        </div>
+        <nav>
+            <ul id="pager" class="pagination pagination-sm mb-0"></ul>
+        </nav>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        (function () {
+            const rows = Array.from(document.querySelectorAll('#productsTable tbody tr'));
+            const searchInput = document.getElementById('searchInput');
+            const pageSizeSelect = document.getElementById('pageSize');
+            const pager = document.getElementById('pager');
+            const shownCount = document.getElementById('shownCount');
+
+            let pageSize = parseInt(pageSizeSelect.value, 10);
+            let currentPage = 1;
+            let filtered = rows;
+
+            function renderPager() {
+                pager.innerHTML = '';
+                const pageCount = Math.max(1, Math.ceil(filtered.length / pageSize));
+                for (let i = 1; i <= pageCount; i++) {
+                    const li = document.createElement('li');
+                    li.className = 'page-item' + (i === currentPage ? ' active' : '');
+                    const a = document.createElement('a');
+                    a.className = 'page-link';
+                    a.href = '#';
+                    a.textContent = i;
+                    a.addEventListener('click', (e) => { e.preventDefault(); currentPage = i; applyPaging(); });
+                    li.appendChild(a);
+                    pager.appendChild(li);
+                }
+            }
+
+            function applyPaging() {
+                rows.forEach(r => r.style.display = 'none');
+                const start = (currentPage - 1) * pageSize;
+                const pageRows = filtered.slice(start, start + pageSize);
+                pageRows.forEach(r => r.style.display = 'table-row');
+                shownCount.textContent = pageRows.length + ' / ' + filtered.length;
+                renderPager();
+            }
+
+            function applyFilter() {
+                const q = searchInput.value.trim().toLowerCase();
+                filtered = rows.filter(r => r.innerText.toLowerCase().indexOf(q) !== -1);
+                currentPage = 1;
+                applyPaging();
+            }
+
+            searchInput.addEventListener('input', () => { applyFilter(); });
+            pageSizeSelect.addEventListener('change', () => { pageSize = parseInt(pageSizeSelect.value, 10); currentPage = 1; applyPaging(); });
+
+            // init
+            applyFilter();
+        })();
+    </script>
+}

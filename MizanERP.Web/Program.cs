@@ -17,7 +17,8 @@ builder.Host.UseSerilog((context, _, config) =>
     config.ReadFrom.Configuration(context.Configuration));
 
 // Add services to the container.
-builder.Services.AddControllers();
+//builder.Services.AddControllers();
+builder.Services.AddControllersWithViews();
 builder.Services.AddRazorPages();
 
 // ✅ DB Context
@@ -95,7 +96,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI(c =>
     {
         c.SwaggerEndpoint("/swagger/v1/swagger.json", "MizanERP API v1");
-        c.RoutePrefix = string.Empty;
+        //c.RoutePrefix = string.Empty;
     });
 }
 
@@ -119,7 +120,8 @@ app.UseCors("AllowFrontend");
 
 app.MapControllers();
 app.MapRazorPages();
-app.MapStaticAssets();
+//app.MapStaticAssets();
+app.UseStaticFiles();
 
 app.MapControllerRoute(
     name: "default",

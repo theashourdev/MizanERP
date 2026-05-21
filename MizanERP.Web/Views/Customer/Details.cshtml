@@ -1,0 +1,33 @@
+@model MizanERP.Domain.Entities.Customer
+
+@{
+    ViewData["Title"] = "Customer Details";
+}
+
+<div class="card">
+    <div class="card-header">
+        <h3>@Model.Name</h3>
+    </div>
+    <div class="card-body">
+        <dl class="row">
+            <dt class="col-sm-3">Contact Info</dt>
+            <dd class="col-sm-9">@(string.IsNullOrEmpty(Model.ContactInfo) ? "-" : Model.ContactInfo)</dd>
+
+            <dt class="col-sm-3">Address</dt>
+            <dd class="col-sm-9">
+                @if (Model.Address != null)
+                {
+                    <div>@Model.Address.Line1</div>
+                    <div>@Model.Address.City, @Model.Address.State @Model.Address.PostalCode</div>
+                    <div>@Model.Address.Country</div>
+                }
+                else
+                {
+                    <span>-</span>
+                }
+            </dd>
+        </dl>
+
+        <a class="btn btn-secondary" asp-action="Index">Back to list</a>
+    </div>
+</div>

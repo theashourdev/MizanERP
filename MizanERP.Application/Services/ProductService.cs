@@ -1,5 +1,3 @@
-using System;
-using System.Threading.Tasks;
 using MizanERP.Application.DTOs;
 using MizanERP.Application.Repositories;
 using MizanERP.Domain.Entities;
@@ -72,43 +70,43 @@ namespace MizanERP.Application.Services
             await _unitOfWork.SaveChangesAsync();
         }
 
-        public async Task<object?> GetProductByIdAsync(Guid productId)
+        public async Task<ProductDto?> GetProductByIdAsync(Guid productId)
         {
             var product = await _productRepository.GetByIdAsync(productId);
             if (product == null)
                 return null;
 
-            return new 
-            { 
-                product.Id, 
-                product.Code, 
-                product.Name,
-                product.Type,
-                product.Unit,
-                product.IsActive,
-                product.InventoryQuantity
+            return new ProductDto()
+            {
+                Id = product.Id.ToString(),
+                Code = product.Code,
+                Name = product.Name,
+                Type = product.Type,
+                Unit = product.Unit,
+                IsActive = product.IsActive,
+                InventoryQuantity = product.InventoryQuantity
             };
         }
 
-        public async Task<List<object>> GetAllProductsAsync()
+
+        public async Task<List<ProductDto>> GetAllProductsAsync()
         {
             var products = await _productRepository.GetAllAsync();
-            var result = new List<object>();
-            
+            var result = new List<ProductDto>();
             foreach (var p in products)
             {
-                result.Add(new 
-                { 
-                    p.Id, 
-                    p.Code, 
-                    p.Name,
-                    p.Type,
-                    p.Unit,
-                    p.IsActive,
-                    p.InventoryQuantity
+                result.Add(new ProductDto
+                {
+                    Id = p.Id.ToString(),
+                    Code = p.Code,
+                    Name = p.Name,
+                    Type = p.Type,
+                    Unit = p.Unit,
+                    IsActive = p.IsActive,
+                    InventoryQuantity = p.InventoryQuantity
                 });
             }
-            
+
             return result;
         }
     }
